@@ -1,0 +1,22 @@
+Glintwatch art and texts
+
+Copyright (c) 2026 TidyMaze
+
+Unless a file says otherwise, the following are licensed under the Creative
+Commons Attribution 4.0 International License (CC BY 4.0):
+
+  - art/                                  (sprites, SVG sources, concept art, style guide)
+  - art-common/                           (palette and emblem style guide)
+  - ux/                                   (UX notes and mockups)
+  - story/                                (lore, statement intro, descriptions)
+  - statement-silver.md, referee/config/*/statement_en.html (game statements)
+  - referee/src/main/resources/view/assets/ (viewer images)
+  - DESIGN.md, IDEAS.md, STATEMENT-REVIEW.md, docs/ (design documents)
+
+You are free to share and adapt the material for any purpose, even commercially,
+provided you give appropriate credit ("Glintwatch by TidyMaze"), link to the
+license and indicate if changes were made.
+
+Full legal text: https://creativecommons.org/licenses/by/4.0/legalcode
+
+The source code (everything else, see LICENSE) is under the MIT License.

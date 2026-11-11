@@ -1,0 +1,10 @@
+target/
+**/target/
+cp.txt
+**/.playwright-mcp/
+*.log
+.DS_Store
+__pycache__/
+*.pyc
+*.class
+*.exec

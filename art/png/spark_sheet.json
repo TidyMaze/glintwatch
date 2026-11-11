@@ -1,0 +1,92 @@
+{
+ "frames": {
+  "spark_0": {
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false
+  },
+  "spark_1": {
+   "frame": {
+    "x": 64,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false
+  },
+  "spark_2": {
+   "frame": {
+    "x": 128,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false
+  },
+  "spark_3": {
+   "frame": {
+    "x": 192,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "sourceSize": {
+    "w": 64,
+    "h": 64
+   },
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 64,
+    "h": 64
+   },
+   "rotated": false,
+   "trimmed": false
+  }
+ },
+ "meta": {
+  "image": "spark_sheet.png",
+  "size": {
+   "w": 256,
+   "h": 64
+  },
+  "scale": "1"
+ }
+}

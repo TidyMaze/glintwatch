@@ -1,0 +1,380 @@
+{
+ "background": {
+  "w": 1920,
+  "h": 1080,
+  "anchor": [
+   0,
+   0
+  ],
+  "tint": false
+ },
+ "floor_0": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0,
+   0
+  ],
+  "tint": false
+ },
+ "floor_1": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0,
+   0
+  ],
+  "tint": false
+ },
+ "floor_checker": {
+  "w": 256,
+  "h": 256,
+  "anchor": [
+   0,
+   0
+  ],
+  "tint": false
+ },
+ "rock": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "crystal": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "crystal_glow": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "badge_zero": {
+  "w": 32,
+  "h": 32,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "mirror_base": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "mirror_bar": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "lock_arc": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "highlight_cell": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "highlight_inner": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "lamp_disc": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "lamp_nose": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "emblem_ring": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "emblem_triangle": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "emblem_square": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "emblem_star": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "emblem_cross": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "beam_solid": {
+  "w": 32,
+  "h": 16,
+  "anchor": [
+   0,
+   0.5
+  ],
+  "tint": true
+ },
+ "beam_dash": {
+  "w": 32,
+  "h": 16,
+  "anchor": [
+   0,
+   0.5
+  ],
+  "tint": true
+ },
+ "beam_dots": {
+  "w": 32,
+  "h": 16,
+  "anchor": [
+   0,
+   0.5
+  ],
+  "tint": true
+ },
+ "beam_double": {
+  "w": 32,
+  "h": 16,
+  "anchor": [
+   0,
+   0.5
+  ],
+  "tint": true
+ },
+ "spark_sheet": {
+  "w": 256,
+  "h": 64,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "flicker_sheet": {
+  "w": 512,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "zone_tile": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0,
+   0
+  ],
+  "tint": true
+ },
+ "zone_border": {
+  "w": 20,
+  "h": 8,
+  "anchor": [
+   0,
+   0.5
+  ],
+  "tint": true
+ },
+ "panel_fill": {
+  "w": 380,
+  "h": 300,
+  "anchor": [
+   0,
+   0
+  ],
+  "tint": false
+ },
+ "panel_frame": {
+  "w": 380,
+  "h": 300,
+  "anchor": [
+   0,
+   0
+  ],
+  "tint": true
+ },
+ "icon_mirror": {
+  "w": 32,
+  "h": 32,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "icon_crystal": {
+  "w": 32,
+  "h": 32,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "icon_refused": {
+  "w": 32,
+  "h": 32,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "logo": {
+  "w": 600,
+  "h": 200,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "mirror_pending": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "pending_tick": {
+  "w": 6,
+  "h": 12,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "mirror_crack_1": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "mirror_crack_2": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "shatter_sheet": {
+  "w": 512,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "crystal_outline": {
+  "w": 128,
+  "h": 128,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": false
+ },
+ "streak_badge": {
+  "w": 64,
+  "h": 51,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "streak_badge_dashed": {
+  "w": 64,
+  "h": 51,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ }
+}

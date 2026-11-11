@@ -1,0 +1,17 @@
+read playerCount:int myId:int
+read n:int
+loop playerCount read playerId:int lampX:int lampY:int dir:word(1)
+loop n read row:word(19)
+read crystalCount:int
+loop crystalCount read cx:int cy:int value:int phase:int
+gameloop
+read turn:int
+loop playerCount read score:int mirrorsInHand:int active:int
+read mirrorCount:int
+loop mirrorCount read x:int y:int type:int lock:int pending:int life:int
+read litCount:int
+loop litCount read lx:int ly:int awake:int litBy:int streaks:string(20)
+write WAIT
+
+STATEMENT
+Your lamp fires along its line; place a mirror on that line to bend the beam towards crystals.
