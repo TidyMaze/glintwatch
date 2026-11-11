@@ -132,7 +132,9 @@ class GameTest {
 
     @Test
     void mirrorReflectsTwentyTurnsThenBreaks() throws Exception {
-        Game g = new Game(example(), 4, Config.bronze());
+        Config cfg = Config.bronze();
+        cfg.earlyEnd = false; // tests wear, not the end
+        Game g = new Game(example(), 4, cfg);
         g.playTurn(cmds(place(5, 3, 1), waitCmd(), waitCmd(), waitCmd()));
         g.playTurn(waits(4));
         int reflecting = 0;
@@ -170,7 +172,9 @@ class GameTest {
 
     @Test
     void supplyGivesOneMirrorOnTurnsDivisibleByFourBeforeInputCappedAtSix() throws Exception {
-        Game g = new Game(example(), 4, Config.bronze());
+        Config cfg = Config.bronze();
+        cfg.earlyEnd = false; // tests supply, not the end
+        Game g = new Game(example(), 4, cfg);
         int[] hand = new int[30];
         for (int t = 1; t <= 29; t++) {
             g.beginTurn();
@@ -265,6 +269,7 @@ class GameTest {
     void dormantCrystalPaysNothingAndClearsStreaks() throws Exception {
         Config c = immediate();
         c.tides = true;
+        c.earlyEnd = false; // tests tides, not the end
         Board b = example();
         b.phase[at(5, 6)] = 44; // awake when (t+44)%45 < 30: turns 1..30, dormant 31..45
         Game g = new Game(b, 4, c);
@@ -432,10 +437,17 @@ class GameTest {
     void sealedTypeHiddenFromRivalsUntilActive() throws Exception {
         Game g = new Game(example(), 4, Config.bronze());
         g.playTurn(cmds(place(5, 3, 1), waitCmd(), waitCmd(), waitCmd()));
-        assertTrue(Protocol.turnLines(g, 0).contains("5 3 1 0 1 20"));
-        assertTrue(Protocol.turnLines(g, 1).contains("5 3 -1 0 1 20"));
+        assertTrue(Protocol.turnLinesV5(g, 0).contains("5 3 1 -1 20"));
+        assertTrue(Protocol.turnLinesV5(g, 1).contains("5 3 -1 -1 20"));
         g.playTurn(cmds(waitCmd(), waitCmd(), waitCmd(), waitCmd()));
-        assertTrue(Protocol.turnLines(g, 1).contains("5 3 1 5 0 20"));
+        assertTrue(Protocol.turnLinesV5(g, 1).contains("5 3 1 5 20"));
+    }
+
+    @Test
+    void copyKeepsACustomSeatMapping() {
+        Game g = new Game(Board.empty(13, 3), new int[] {2, 0}, Config.woodOne()); // relative ids: me at seat 2
+        assertArrayEquals(new int[] {2, 0}, g.copy().seatOf);
+        assertArrayEquals(new int[] {2, 0}, g.copyWith(Config.bronze()).seatOf);
     }
 
     @Test

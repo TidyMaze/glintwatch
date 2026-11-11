@@ -87,7 +87,7 @@ public final class BatchRunner {
             rec.slot[id] = (id + gi) % players;
             rec.bot[id] = names[rec.slot[id]];
             bots[id] = Agents.create(rec.bot[id], cfg, seed);
-            bots[id].init(Protocol.initLines(g.board, players, id, cfg));
+            bots[id].init(Protocol.initLinesV5(g, id));
         }
         while (!g.isOver()) {
             g.beginTurn();
@@ -97,7 +97,7 @@ public final class BatchRunner {
                 if (!g.active[id]) continue;
                 long t0 = System.nanoTime();
                 try {
-                    cmds[id] = CommandParser.parse(bots[id].act(Protocol.turnLines(g, id)));
+                    cmds[id] = CommandParser.parse(bots[id].act(Protocol.turnLinesV5(g, id)));
                 } catch (Exception | Error ex) {
                     res.crashes++;
                     rec.crashed[id] = true;

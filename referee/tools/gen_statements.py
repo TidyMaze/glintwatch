@@ -90,7 +90,8 @@ def filter_inline(text, level):
             out.append(before + GAP)
         pos = end + (len(CLOSE) if closed else 0)
     s = "".join(out)
-    # clean only where text was removed
+    # clean only where text was removed; adjacent hidden scopes count as one gap
+    s = re.sub(GAP + "(?: *" + GAP + ")+", GAP, s)
     s = re.sub(" *" + GAP + " *(?=[.,;)\n]|$)", "", s)
     s = re.sub(" *" + GAP + " *", " ", s)
     return "\n".join(line.rstrip() for line in s.split("\n"))
@@ -244,11 +245,15 @@ def url_live(name, fetch=_http_status):
 
 def image_html(line, exists=url_live):
     """'![alt](img/name.png)' -> <img> on the public repo; dropped while the PNG does not exist (point 4)."""
-    m = re.match(r"^!\[([^\]]*)\]\((?:[^)]*/)?([^/)]+)\)\s*$", line.strip())
+    m = re.match(r'^!\[([^\]]*)\]\((?:[^)"]*/)?([^/)" ]+)(?: "([^"]*)")?\)\s*$', line.strip())
     if not m or not exists(m.group(2)):
         return ""
-    return '<img src="%s/%s" alt="%s" style="width: 100%%; max-width: 400px; display: block; margin: 10px auto;" />' % (
-        IMAGE_BASE, m.group(2), html.escape(m.group(1), quote=True))
+    style = "width: 100%; max-width: 400px; display: block; margin: 10px auto" + (" 2px;" if m.group(3) else ";")
+    img = '<img src="%s/%s" alt="%s" style="%s" />' % (IMAGE_BASE, m.group(2), html.escape(m.group(1), quote=True), style)
+    if m.group(3):  # optional '![alt](img/x.png "caption")': one neutral line under the image
+        img += ('<div style="text-align: center; font-size: 90%%; font-style: italic; margin-bottom: 10px;">%s</div>'
+                % _inline_html(m.group(3)))
+    return img
 
 
 def to_html(md):
@@ -256,7 +261,9 @@ def to_html(md):
     for block in md.split("\n\n"):
         lines = block.split("\n")
         if lines[0] == NEW_BLOCK:
-            out.append('<div style="%s">\n%s\n</div>' % (NEW_STYLE, to_html("\n".join(lines[1:]))))
+            inner = to_html("\n".join(lines[1:]))
+            if inner.strip():  # a box whose only content was a dropped image stays out
+                out.append('<div style="%s">\n%s\n</div>' % (NEW_STYLE, inner))
             continue
         i = 0
         while i < len(lines):
@@ -307,6 +314,10 @@ def to_html(md):
 
 
 COVER_URL = "https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/cover.png"
+
+
+# DESIGN V5.5: the statement is neutral (no "you"); the cover and story/DESCRIPTION.md keep the writer's pitch
+STATEMENT_PITCH = "Players bend their lamps' beams with shared mirrors to hold the reef's crystals alone. 2 to 4 players."
 
 
 def read_pitch(description):
@@ -467,9 +478,12 @@ def page(doc, level, cover=None, pitch=None):
 
 
 def statement_block(design_text):
-    m = re.search(r"^## Statement v4.*?$(.*?)^# ", design_text, re.S | re.M)
+    """The player-facing statement: "Statement v5 (staged)" when present (DESIGN V5.5), else "Statement v4"."""
+    m = re.search(r"^## Statement v5.*?$(.*?)(?=^#{1,2} |\Z)", design_text, re.S | re.M)
     if not m:
-        raise SystemExit("Statement v4 block not found")
+        m = re.search(r"^## Statement v4.*?$(.*?)^# ", design_text, re.S | re.M)
+    if not m:
+        raise SystemExit("Statement block not found")
     quoted = [l for l in m.group(1).split("\n") if l.startswith(">")]
     return "\n".join(quoted)
 
@@ -479,7 +493,7 @@ def main(argv):
     design = argv[1] if len(argv) > 1 else os.path.join(here, "..", "..", "DESIGN.md")
     config = argv[2] if len(argv) > 2 else os.path.join(here, "..", "config")
     doc = statement_block(open(design, encoding="utf-8").read())
-    pitch = read_pitch(open(os.path.join(os.path.dirname(design), "story", "DESCRIPTION.md"), encoding="utf-8").read())
+    pitch = STATEMENT_PITCH
     for level in range(1, 5):
         text = page(doc, level, cover=COVER_URL, pitch=pitch)
         path = os.path.join(config, "level%d" % level, "statement_en.html")

@@ -12,6 +12,7 @@ def uri(n):
     key = (n, VECTOR)
     if key not in _b64:
         if VECTOR: _b64[key] = 'data:image/svg+xml;base64,' + base64.b64encode(open(os.path.join(HERE, 'sprites', n + '.svg'), 'rb').read()).decode()
+        elif n == 'background': _b64[key] = 'data:image/jpeg;base64,' + base64.b64encode(open(os.path.join(PNG, 'background.jpg'), 'rb').read()).decode()
         else: _b64[key] = 'data:image/png;base64,' + base64.b64encode(open(os.path.join(PNG, n + '.png'), 'rb').read()).decode()
     return _b64[key]
 _filters = {}
@@ -113,13 +114,10 @@ def board():
         o.append(text(X, Y + .11 * cell, str(v), round(.30 * cell), INK, 'middle'))
         if isinstance(own, int): o.append(img('emblem_' + EMB[own], X + cell * .3, Y - cell * .3, 24, 24, P[own]))
         if own == 'X': o.append(img('badge_zero', X + cell * .3, Y - cell * .3, 24, 24))
-        fs = max(17, round(.32 * cell)); bw, bh = 1.45 * fs, 1.15 * fs; by_ = Y + cell / 2 - bh / 2 - 1
+        bw, bh = 34, 42; by_ = Y + cell / 2 - bh / 2 + 6  # owner 14.3 B: 36 px digit, chip at the cell corner, may overlap the neighbour
         if (x, y) in STREAK and own is not None:
-            k_ = STREAK[(x, y)]; c_ = P[own] if isinstance(own, int) else '#F4F6FF'; bx_ = X + cell / 2 - bw / 2 - 1
-            o.append(img('streak_badge_dashed' if own == 'X' else 'streak_badge', bx_, by_, bw, bh, c_) + text(bx_, by_ + fs * .37, f'x{k_}', fs, c_, 'middle'))
-        if (x, y) in TIMER:
-            bx_ = X - cell / 2 + bw / 2 + 1
-            o.append(img('streak_badge', bx_, by_, bw, bh, '#8E9BB3') + text(bx_, by_ + fs * .37, TIMER[(x, y)], fs, '#F4F6FF', 'middle'))
+            k_ = STREAK[(x, y)]; c_ = P[own] if isinstance(own, int) else '#F4F6FF'; bx_ = X + cell / 2 - bw / 2 + 6
+            o.append(img('streak_badge_dashed' if own == 'X' else 'streak_badge', bx_, by_, bw, bh, c_) + text(bx_, by_ + 13, str(k_), 36, c_, 'middle'))
     for (x, y, t) in mirrors:
         X, Y = C(x, y); o.append(img('mirror_base', X, Y, cell, cell)); o.append(img('mirror_bar', X, Y, cell, cell, rot=90 * t))
         n, who = lock.get((x, y), (0, None))
@@ -194,17 +192,17 @@ def contact():
         o.append(f'<pattern id="cs{s}" patternUnits="userSpaceOnUse" x="40" y="{780 + s*36}" width="32" height="16"><image width="32" height="16" href="{uri(p)}"/></pattern>'
                  f'<rect x="40" y="{780 + s*36}" width="600" height="16" fill="url(#cs{s})"{tint(P[s])}/>' + text(660, 794 + s * 36, p + ' 32x16', 18, '#A0A6B8', weight='normal'))
     o.append(f'<pattern id="zb" patternUnits="userSpaceOnUse" x="40" y="930" width="20" height="8"><image width="20" height="8" href="{uri("zone_border")}"/></pattern><rect x="40" y="930" width="600" height="8" fill="url(#zb)"{tint(P[1])}/>' + text(660, 940, 'zone_border 20x8', 18, '#A0A6B8', weight='normal'))
-    for i, (n, c) in enumerate([('badge_zero', None), ('icon_mirror', None), ('icon_crystal', P[3]), ('icon_refused', None)]):
-        o.append(img(n, 900 + i * 110, 800, 64, 64, c, 0, 0) + text(900 + i * 110, 885, n, 15, '#A0A6B8', weight='normal'))
-    for i, (n, c) in enumerate([('mirror_pending', P[1]), ('mirror_crack_1', None), ('mirror_crack_2', None), ('crystal_outline', None), ('streak_badge', P[2]), ('streak_badge_dashed', '#F4F6FF'), ('streak_badge', '#8E9BB3'), ('pending_tick', None)]):
+    for i, (n, c) in enumerate([('badge_zero', None), ('icon_mirror', None), ('icon_crystal', P[3]), ('icon_refused', None), ('icon_supply', P[0]), ('icon_place', P[1]), ('icon_turn', P[2]), ('icon_wait', '#E8EAF0')]):
+        o.append(img(n, 880 + i * 64, 800, 48, 48, c, 0, 0) + text(880 + i * 64 + 24, 870 + 16 * (i % 2), n.replace('icon_', '').replace('badge_', ''), 14, '#A0A6B8', 'middle', 'normal'))
+    for i, (n, c) in enumerate([('mirror_pending', P[1]), ('mirror_crack_1', None), ('mirror_crack_2', None), ('crystal_outline', None), ('streak_badge', P[2]), ('streak_badge_dashed', '#F4F6FF'), ('streak_badge', P[0]), ('pending_tick', None)]):
         X = 40 + i * 124; o.append(img('floor_0', X, 960, 96, 96, ax=0, ay=0))
         if n.startswith('mirror_crack'): o.append(img('mirror_bar', X + 48, 1008, 96, 96))
-        w_, h_ = {'streak_badge': (64, 51), 'streak_badge_dashed': (64, 51), 'pending_tick': (12, 24)}.get(n, (96, 96))
+        w_, h_ = {'streak_badge': (34, 42), 'streak_badge_dashed': (34, 42), 'pending_tick': (12, 24)}.get(n, (96, 96))
         o.append(img(n, X + 48, 1008, w_, h_, c) + text(X + 48, 1074, n.replace('streak_badge_dashed', 'badge_dashed').replace('streak_badge', 'badge'), 14, '#A0A6B8', 'middle', 'normal'))
     o.append(img('shatter_sheet', 1050, 960, 384, 96, ax=0, ay=0) + text(1050, 1074, 'shatter_sheet 4x128', 14, '#A0A6B8', weight='normal'))
     # crystal sizes on floor, as on the board at cell 66
     for v in (1, 2, 3):
-        X = 1380 + v * 120; o.append(img('floor_0', X - 33, 815, 66, 66, ax=0, ay=0)); sz = 128 * [0, .40, .52, .64][v] * 66 / 92
+        X = 1400 + v * 110; o.append(img('floor_0', X - 33, 815, 66, 66, ax=0, ay=0)); sz = 128 * [0, .40, .52, .64][v] * 66 / 92
         o.append(img('crystal', X, 848, sz, sz, '#9AA0B4') + text(X, 848 + 7, str(v), 20, INK, 'middle'))
     o.append(text(1420, 910, 'crystal values 1-3 at cell 66', 18, '#A0A6B8', weight='normal'))
     o.append(img('floor_1', 1500, 960, 96, 96, ax=0, ay=0) + img('rock', 1548, 1008, 96, 96) + text(1500, 1074, 'rock on floor_1', 14, '#A0A6B8', weight='normal'))

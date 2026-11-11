@@ -15,19 +15,31 @@ public final class Game {
     public final int[][] streak;
     /** Per cell: player who lit the crystal alone last turn, -1 nobody, -2 contested. */
     public final int[] litBy;
+    /** Mirrors that shattered at the end of the last turn: {cell, final type} (V5.8 echo, information only). */
+    public final java.util.List<int[]> lastShattered = new java.util.ArrayList<>();
+    /** Consecutive turns each player did nothing (WAIT or an impossible action). */
+    public final int[] idleTurns;
+    private String earlyReason;
+    private boolean fastForwarding;
     /** Turns played; the current turn number is turn + 1. */
     public int turn;
     private int suppliedTurn;
 
     public Game(Board board, int playerCount, Config cfg) {
+        this(board, Seats.seatsFor(playerCount), cfg);
+    }
+
+    /** @param seatOf seat of each player id (bots use relative ids: themselves first, then clockwise). */
+    public Game(Board board, int[] seatOf, Config cfg) {
         this.cfg = cfg;
         this.board = board;
-        this.playerCount = playerCount;
-        seatOf = Seats.seatsFor(playerCount);
+        this.playerCount = seatOf.length;
+        this.seatOf = seatOf.clone();
         score = new int[playerCount];
         mirrorsLeft = new int[playerCount];
         active = new boolean[playerCount];
         streak = new int[playerCount][board.n * board.n];
+        idleTurns = new int[playerCount];
         litBy = new int[board.n * board.n];
         Arrays.fill(litBy, -1);
         for (int id = 0; id < playerCount; id++) {
@@ -55,7 +67,7 @@ public final class Game {
     public Game copyWith(Config rules) {
         Board b = board.copy();
         int[] life = b.mirrorLife.clone();
-        Game g = new Game(b, playerCount, rules);
+        Game g = new Game(b, seatOf, rules);
         System.arraycopy(life, 0, b.mirrorLife, 0, life.length);
         System.arraycopy(score, 0, g.score, 0, playerCount);
         System.arraycopy(mirrorsLeft, 0, g.mirrorsLeft, 0, playerCount);
@@ -100,7 +112,47 @@ public final class Game {
     }
 
     public boolean isOver() {
-        return turn >= cfg.maxTurns || activeCount() < 2;
+        return earlyReason != null || turn >= cfg.maxTurns || activeCount() < 2;
+    }
+
+    /** Why the game ended: "decided", "stale", "fewer than two players", "max turns"; null while it runs. */
+    public String endReason() {
+        if (earlyReason != null) return earlyReason;
+        if (activeCount() < 2) return "fewer than two players";
+        return turn >= cfg.maxTurns ? "max turns" : null;
+    }
+
+    /** B of V5.5: most points one player can score in a turn (streak cap x sum of values, + strike). */
+    public int maxGainPerTurn() {
+        int sum = 0;
+        for (int p = 0; p < board.n * board.n; p++) if (board.kind[p] == Board.CRYSTAL) sum += board.value[p];
+        return (cfg.contested ? cfg.streakCap : 1) * sum + cfg.strikeBonus;
+    }
+
+    /** V5.5 decided: every pair of active players is further apart than turns left x B. */
+    boolean decided() {
+        long bound = (long) (cfg.maxTurns - turn) * maxGainPerTurn();
+        for (int i = 0; i < playerCount; i++)
+            for (int j = i + 1; j < playerCount; j++)
+                if (active[i] && active[j] && Math.abs(score[i] - score[j]) <= bound) return false;
+        return true;
+    }
+
+    boolean stale() {
+        for (int id = 0; id < playerCount; id++) if (active[id] && idleTurns[id] < cfg.staleTurns) return false;
+        return true;
+    }
+
+    /** End of turn (F6 step 8 + V5.5): decided, or stale = the referee plays the remaining turns with everyone waiting. */
+    private void earlyEndCheck() {
+        if (!cfg.earlyEnd || fastForwarding || turn >= cfg.maxTurns || activeCount() < 2) return;
+        if (decided()) earlyReason = "decided";
+        else if (stale()) {
+            fastForwarding = true;
+            while (turn < cfg.maxTurns && activeCount() >= 2) playTurn(new Command[playerCount]);
+            fastForwarding = false;
+            earlyReason = "stale";
+        }
     }
 
     /** F6 step 0, before the input of the current turn is sent; idempotent within a turn. */
@@ -117,6 +169,7 @@ public final class Game {
     public TurnReport playTurn(Command[] cmds) {
         beginTurn();
         TurnReport r = new TurnReport(playerCount, cmds);
+        lastShattered.clear();
         int[] placeAt = new int[playerCount], turnAt = new int[playerCount];
         for (int id = 0; id < playerCount; id++) {
             placeAt[id] = -1;
@@ -137,7 +190,12 @@ public final class Game {
             if (r.beams[id] != null && r.beams[id].stop == Beam.Stop.STRIKE) r.gain[id] += cfg.strikeBonus;
         for (int id = 0; id < playerCount; id++) if (active[id]) score[id] += r.gain[id];
         advanceMirrors(r, placed, turned);
+        for (int id = 0; id < playerCount; id++) {
+            boolean acted = placeAt[id] >= 0 && r.invalid[id] == null || turnAt[id] >= 0;
+            idleTurns[id] = acted ? 0 : idleTurns[id] + 1;
+        }
         turn++;
+        earlyEndCheck();
         return r;
     }
 
@@ -253,6 +311,7 @@ public final class Game {
             if (turned[p]) continue;
             board.mirrorLock[p] = Math.max(board.mirrorLock[p] - 1, 0);
             if (board.mirrorLife[p] > 0 && --board.mirrorLife[p] == 0) {
+                lastShattered.add(new int[] {p, board.mirrorType[p]});
                 board.removeMirror(p);
                 r.broken.add(p);
             }

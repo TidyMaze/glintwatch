@@ -1,33 +1,29 @@
-read playerCount:int myId:int
-read n:int
-loop playerCount read playerId:int lampX:int lampY:int dir:word(1)
-loop n read row:word(19)
-read crystalCount:int
-loop crystalCount read crystalX:int crystalY:int value:int phase:int
+read reef:string(361)
+read size:int
 gameloop
-read turn:int
-loop playerCount read score:int mirrorsInHand:int active:int
+read myScore:int mirrors0:int mirrors1:int mirrors2:int mirrors3:int
 read mirrorCount:int
-loop mirrorCount read x:int y:int mirrorType:int lock:int pending:int life:int
-read turnCrystalCount:int
-loop turnCrystalCount read crystalLine:string(40)
+loop mirrorCount read x:int y:int mirrorType:int lock:int life:int
+read crystalCount:int
+loop crystalCount read tide:int litBy:int myStreak:int
 write WAIT
 
 STATEMENT
 Light crystals with your lamp's beam: place mirrors to bend it.
 
 INPUT
-playerCount: 2 to 4
-myId: your player id
-dir: E, S, W or N, the direction your lamp fires
-row: one row of the reef, y = 0 first
-phase: tide phase of the crystal (-1: always awake)
-mirrorType: 0 for /, 1 for \, -1 for an opponent's pending mirror
-pending: 1 while the mirror does not bend beams yet
-life: active turns left (-1: never wears)
-crystalCount: number of crystals (one line each)
-crystalLine: x y awake litBy then playerCount streaks, space-separated; split it (awake 1/0; litBy: player who lit it alone last turn, -1 nobody, -2 several; your streak is the (myId+1)-th streak)
-turnCrystalCount: number of crystal lines this turn
+reef: size*size characters, row by row from y = 0: cell (x, y) is reef[y*size+x]; . empty, # rock, 1-3 crystal value, A-D lamp of player 0-3 (A = you; the number of lamps is the number of players)
+size: width and height of the reef
+myScore: your score
+mirrors0: mirrors you can still place; mirrors1-mirrors3: the other players' (-1 if eliminated or missing)
+mirrorCount: number of mirrors on the reef
+mirrorType: 0 for /, 1 for \, -1 for another player's pending mirror
+lock: turns before it can be turned (0 = can be turned, -1 = pending: does not bend beams yet)
+life: active turns left before it shatters (-1: never wears; 0: shattered at the end of last turn, cell now empty)
+crystalCount: number of crystals; one line each, in reef order (by y, then x)
+tide: awake for tide more turns if > 0, asleep for -tide more turns if < 0, 0 = always awake
+litBy: player who lit it alone last turn, -1 nobody, -2 several
+myStreak: your streak on this crystal, 0 to 4
 
 OUTPUT
 PLACE x y type | TURN x y | WAIT, optionally followed by a message

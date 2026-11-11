@@ -1,5 +1,5 @@
 """Tests for gen_statements.py. Run: python3 -I tools/test_gen_statements.py"""
-import os, sys
+import os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_statements as G
 
@@ -104,6 +104,17 @@ check("image absent dropped", G.image_html("![Two mirrors](img/none.png)", lambd
 check("image present", G.image_html("![Two mirrors](img/mirrors.png)", lambda n: True),
       '<img src="%s/mirrors.png" alt="Two mirrors" style="width: 100%%; max-width: 400px; display: block; margin: 10px auto;" />' % G.IMAGE_BASE)
 
+check("image caption", G.image_html('![Lock](img/lock.png "A turned mirror stays locked 5 turns.")', lambda n: True),
+      '<img src="%s/lock.png" alt="Lock" style="width: 100%%; max-width: 400px; display: block; margin: 10px auto 2px;" />'
+      '<div style="text-align: center; font-size: 90%%; font-style: italic; margin-bottom: 10px;">A turned mirror stays locked 5 turns.</div>' % G.IMAGE_BASE)
+G.image_html.__defaults__ = (lambda n: False,)
+check("new box around a dropped image is dropped", G.to_html("\x03\n![Lock](img/lock.png)"), "")
+G.image_html.__defaults__ = (G.url_live,)
+check("image caption absent dropped", G.image_html('![Lock](img/lock.png "Caption")', lambda n: False), "")
+
+check("adjacent hidden scopes leave no space", fi("x [Wood 2 only]a[/][Wood 1 only]b[/][Bronze only]c[/][Silver+](d)[/]);", 1), "x a);")
+check("adjacent hidden scopes, middle", fi("x [Wood 2 only]a[/][Wood 1 only]b[/][Bronze only]c[/][Silver+](d)[/]);", 3), "x c);")
+
 # page skeleton per level on a small document
 mini = """> ### League introduction
 > This is a **league based** challenge. For this challenge, leagues exist.
@@ -156,4 +167,8 @@ check("level4 no preview", "What is in store" in p4, False)
 check("level4 opener", "This league:</b> Tides." in p4, True)
 check("no h2 for subsections", "<h2>The reef</h2>" in p1, False)
 
+check("v5 preferred", G.statement_block("## Statement v4\n> old\n## Statement v5 (staged)\n> new\n# History\n"), "> new")
+check("v4 fallback", G.statement_block("## Statement v4\n> old\n# History\n"), "> old")
+check("statement pitch is neutral (V5.5)", bool(re.search(r"\byou(r)?\b", G.STATEMENT_PITCH, re.I)), False)
+check("statement pitch text", G.STATEMENT_PITCH, "Players bend their lamps' beams with shared mirrors to hold the reef's crystals alone. 2 to 4 players.")
 print("OK", "gen_statements tests")

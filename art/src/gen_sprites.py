@@ -204,13 +204,35 @@ def gem_outline(cx, cy, w, h):
 S['crystal_outline'] = (128, 128, svg(128, 128, gem_outline(64, 64, GEM_W - 10, 114)))  # dormant; not tinted; same box as crystal.png
 # streak / timer chip (UX 12, owner 2026-11-11): ink pill + white 2 px border, tinted (ink stays dark under multiply).
 # Drawn at 2x of fs=22: 64x51 (ratio 1.45/1.15); scale to 1.45*fs x 1.15*fs. Text (x2..x4, arrows) is a Text entity.
-S['streak_badge'] = (64, 51, svg(64, 51, f'<rect x="2" y="2" width="60" height="47" rx="16" fill="{INK}" stroke="#FFFFFF" stroke-width="4"/>'))
-S['streak_badge_dashed'] = (64, 51, svg(64, 51, f'<rect x="2" y="2" width="60" height="47" rx="16" fill="{INK}"/>'
-    '<rect x="2" y="2" width="60" height="47" rx="16" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="9 6"/>'))  # contested (white) / decaying (60 %)
+S['streak_badge'] = (68, 84, svg(68, 84, f'<rect x="2" y="2" width="64" height="80" rx="16" fill="{INK}" stroke="#FFFFFF" stroke-width="4"/>'))  # owner 14.3 B: drawn at 2x of 34x42, even 2 px border
+S['streak_badge_dashed'] = (68, 84, svg(68, 84, f'<rect x="2" y="2" width="64" height="80" rx="16" fill="{INK}"/>'
+    '<rect x="2" y="2" width="64" height="80" rx="16" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="10 6"/>'))  # contested (white) / decaying (60 %)
+
+# --- action / supply icons 48 (UX 14): white with ink outline, tinted at runtime
+def o2(d, w=4): return f'<path d="{d}" fill="none" stroke="{INK}" stroke-width="{w+5}" stroke-linecap="round" stroke-linejoin="round"/><path d="{d}" fill="none" stroke="#FFFFFF" stroke-width="{w}" stroke-linecap="round" stroke-linejoin="round"/>'
+S['icon_supply'] = (48, 48, svg(48, 48, o2('M8,34 L28,14', 6) + f'<circle cx="35" cy="34" r="10" fill="#FFFFFF" stroke="{INK}" stroke-width="3"/>' + f'<path d="M35,28 V40 M29,34 H41" stroke="{INK}" stroke-width="3.5" stroke-linecap="round"/>'))  # mirror + plus
+S['icon_place'] = (48, 48, svg(48, 48, f'<rect x="7" y="30" width="34" height="12" rx="4" fill="#FFFFFF" stroke="{INK}" stroke-width="3"/>' + o2('M24,5 V22 M16,15 L24,23 L32,15', 4.5)))  # arrow down onto a cell
+S['icon_turn'] = (48, 48, svg(48, 48, o2('M37,24 A13,13 0 1 1 30,12.5', 4.5) + f'<polygon points="25,5 37,11 27,19" fill="#FFFFFF" stroke="{INK}" stroke-width="2.5" stroke-linejoin="round"/>'))  # rotate arrow
+S['icon_wait'] = (48, 48, svg(48, 48, f'<path d="M13,6 H35 M13,42 H35 M15,6 C15,18 33,18 33,24 C33,30 15,30 15,42 M33,6 C33,18 15,18 15,24 C15,30 33,30 33,42" fill="none" stroke="{INK}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>'
+    '<path d="M13,6 H35 M13,42 H35 M15,6 C15,18 33,18 33,24 C33,30 15,30 15,42 M33,6 C33,18 15,18 15,24 C15,30 33,30 33,42" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
+    '<path d="M18,38 L24,32 L30,38 Z" fill="#FFFFFF"/>'))  # hourglass
+
+# --- beam tiles with the glow baked in (replay size: one TilingSprite per segment instead of Line + tile).
+# 32x40, anchor 0,0.5, white (tinted). Core 16 px in rows 12..28 = the old tile; glow = soft band, alpha ~.25 at the core
+# edge fading to 0 at the tile edge (old look: Line 2w+6 at alpha .22). Scale tile height to 2.5*w so the core stays w.
+GLOW = ('<linearGradient id="gl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/>'
+        '<stop offset=".09" stop-color="#fff" stop-opacity=".30"/><stop offset=".91" stop-color="#fff" stop-opacity=".30"/>'  # UX: .22 read fainter than the old Line
+        '<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>')
+# 32x48: core 16 px in rows 16..32; flat glow band alpha .22 (old Line), 4 px fade at the edges. Height = 3*w -> core w, glow ~2.6w.
+def glow_tile(core): return svg(32, 48, '<rect width="32" height="48" fill="url(#gl)"/>' + f'<g transform="translate(0,16)">{core}</g>', GLOW)
+S['beam_solid_glow'] = (32, 48, glow_tile('<rect width="32" height="16" fill="#FFFFFF"/>'))
+S['beam_dash_glow'] = (32, 48, glow_tile('<rect x="0" y="0" width="22" height="16" rx="3" fill="#FFFFFF"/>'))
+S['beam_dots_glow'] = (32, 48, glow_tile('<circle cx="8" cy="8" r="7" fill="#FFFFFF"/><circle cx="24" cy="8" r="7" fill="#FFFFFF"/>'))
+S['beam_double_glow'] = (32, 48, glow_tile(f'<rect width="32" height="16" fill="#FFFFFF"/><rect y="5.5" width="32" height="5" fill="{INK}"/>'))
 
 ANCHORS = {'background': (0, 0), 'floor_checker': (0, 0), 'floor_0': (0, 0), 'floor_1': (0, 0), 'zone_tile': (0, 0), 'panel_fill': (0, 0), 'panel_frame': (0, 0),
-           'beam_solid': (0, .5), 'beam_dash': (0, .5), 'beam_dots': (0, .5), 'beam_double': (0, .5), 'zone_border': (0, .5)}
-TINT = {'mirror_pending', 'streak_badge', 'streak_badge_dashed', 'crystal', 'crystal_glow', 'lock_arc', 'highlight_inner', 'lamp_disc', 'lamp_nose', 'zone_tile', 'zone_border', 'panel_frame',
+           'beam_solid': (0, .5), 'beam_solid_glow': (0, .5), 'beam_dash_glow': (0, .5), 'beam_dots_glow': (0, .5), 'beam_double_glow': (0, .5), 'beam_dash': (0, .5), 'beam_dots': (0, .5), 'beam_double': (0, .5), 'zone_border': (0, .5)}
+TINT = {'beam_solid_glow', 'beam_dash_glow', 'beam_dots_glow', 'beam_double_glow', 'icon_supply', 'icon_place', 'icon_turn', 'icon_wait', 'mirror_pending', 'streak_badge', 'streak_badge_dashed', 'crystal', 'crystal_glow', 'lock_arc', 'highlight_inner', 'lamp_disc', 'lamp_nose', 'zone_tile', 'zone_border', 'panel_frame',
         'icon_crystal', 'spark_sheet', 'flicker_sheet', 'beam_solid', 'beam_dash', 'beam_dots', 'beam_double'} | {'emblem_' + e for e in EMBLEMS}
 
 def export():
@@ -226,6 +248,12 @@ def export():
                   spriteSourceSize=dict(x=0, y=0, w=fw, h=fh), rotated=False, trimmed=False) for i in range(n)}
         json.dump(dict(frames=frames, meta=dict(image=name + '.png', size=dict(w=fw*n, h=fh), scale='1')),
                   open(os.path.join(PNG, name + '.json'), 'w'), indent=1)
+    # UX 14: background as JPEG q80, the PNG removed; every other PNG minified losslessly (same size and pixels)
+    bp = os.path.join(PNG, 'background.png')
+    subprocess.run(['sips', '-s', 'format', 'jpeg', '-s', 'formatOptions', '80', bp, '--out', os.path.join(PNG, 'background.jpg')], stdout=subprocess.DEVNULL, check=True)
+    os.remove(bp); manifest['background']['file'] = 'background.jpg'
+    tools = os.path.join(HERE, '..', '..', 'art-common', 'tools', 'pngmin.py')
+    subprocess.run(['python3', tools] + [os.path.join(PNG, n + '.png') for n in S if n != 'background'], stdout=subprocess.DEVNULL, check=True)
     json.dump(manifest, open(os.path.join(PNG, 'manifest.json'), 'w'), indent=1)
     print(len(S), 'sprites exported')
 

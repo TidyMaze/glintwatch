@@ -3,6 +3,9 @@ package com.codingame.game.engine;
 /** Rule switches and constants (DESIGN F1); every (T) tunable value lives here only. */
 public final class Config {
     public int maxTurns = 150;
+    /** DESIGN V5.5 early end: "decided" (no pair can change order) and "stale" (all idle STALE_TURNS turns). */
+    public boolean earlyEnd = true;
+    public int staleTurns = 20;
     /** Mirrors in hand at the start (Wood: the whole stock). */
     public int mirrorStock = 4;
     /** +1 mirror before the input of turns t % supplyEvery == 0 (0 = no supply), hand capped at handMax. */
@@ -30,6 +33,8 @@ public final class Config {
     public Config copy() {
         Config c = new Config();
         c.maxTurns = maxTurns;
+        c.earlyEnd = earlyEnd;
+        c.staleTurns = staleTurns;
         c.mirrorStock = mirrorStock;
         c.supplyEvery = supplyEvery;
         c.handMax = handMax;

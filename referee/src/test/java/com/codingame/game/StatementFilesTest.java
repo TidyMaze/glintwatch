@@ -36,9 +36,26 @@ class StatementFilesTest {
         assertFalse(level(4).contains("What is in store for me in the higher leagues?"));
     }
 
+    /** The 11 diagrams in statement order, as tagged per league in Statement v5 (writer, commit 7731e77). */
+    private static final java.util.List<?>[] EXPECTED_DIAGRAMS = {
+        java.util.List.of("setup.png", "mirrors.png"),
+        java.util.List.of("setup.png", "stops.png", "mirrors.png", "lock.png", "contested.png", "streak.png"),
+        java.util.List.of("setup.png", "stops.png", "mirrors.png", "lock.png", "contested.png", "streak.png", "build.png", "wear.png", "order.png"),
+        java.util.List.of("setup.png", "stops.png", "mirrors.png", "lock.png", "contested.png", "streak.png", "build.png", "wear.png", "tides.png",
+            "strike.png", "order.png")};
+
+    /** Diagrams (moderator point 4): only the artist's files from art/png/statement, live on the public repo. */
     @Test
-    void noImageLinkToAFileThatIsNotShipped() throws Exception {
-        for (int k = 1; k <= 4; k++)
-            assertFalse(level(k).contains("art/png/statement/"), "level " + k + ": diagrams are dropped until the public repo has them");
+    void diagramsAreTheArtistsFilesInTheRightLevels() throws Exception {
+        java.util.regex.Pattern img = java.util.regex.Pattern.compile("art/png/statement/([a-z]+\\.png)");
+        for (int k = 1; k <= 4; k++) {
+            java.util.List<String> names = new java.util.ArrayList<>();
+            java.util.regex.Matcher m = img.matcher(level(k));
+            while (m.find()) {
+                names.add(m.group(1));
+                assertTrue(Files.exists(Path.of("../art/png/statement/" + m.group(1))), "level " + k + ": " + m.group(1));
+            }
+            assertEquals(EXPECTED_DIAGRAMS[k - 1], names, "level " + k);
+        }
     }
 }

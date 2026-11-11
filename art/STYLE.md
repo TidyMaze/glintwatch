@@ -32,7 +32,7 @@ Seat 0 is Sky `#56B4E9` with the ring, seat 1 Amber `#E69F00` with the triangle,
 - Panel = `panel_fill` (not tinted) + `panel_frame` (tinted). A single tinted panel would also tint the fill.
 - `lock_arc`: 54 deg centred on the top. Rotate the copies by `72*k` for k = 0..4.
 - `mirror_crack_1/2`: overlays on `mirror_bar`, with the same rotation.
-- `streak_badge` (64x51, drawn at 2x) is the chip for the streak (x2-x4) and the phase timer. Scale it to `1.45*fs x 1.15*fs` with `fs = max(17, round(0.32*cell))`. The tint colours the border and the ink fill stays dark. Tint with the player colour for a streak and `#8E9BB3` for the timer; the text is a Text entity. `streak_badge_dashed` covers the contested case (white) and the decaying one (60 %). Pips were dropped (owner, 2026-11-11). `pending_tick` is 6x12 at display size.
+- `streak_badge` / `streak_badge_dashed` (68x84, drawn at 2x of 34x42) are owner option B (UX.md 14.3): a 36 px digit sits in the chip at the cell corner, and there is no timer chip. The tint colours the border and the ink fill stays dark. `_dashed` covers the contested (white) and decaying (60 %) cases. `pending_tick` is 6x12 at display size.
 - Deviations from UX.md 9:
   - `zone_border` is 20x8, because dash 12/8 has a period of 20 (32 does not tile).
   - The panel is split into `panel_fill` + `panel_frame`.
@@ -61,3 +61,13 @@ Seat 0 is Sky `#56B4E9` with the ring, seat 1 Amber `#E69F00` with the triangle,
 - `concept/mock_viewer_{A,B}.{svg,png}` are 1920x1080 mocks of the DESIGN.md 12.1 layout.
 - `concept/cover_{A,B}.{svg,png}` are 1200x675 cover concepts: 4 beams crossing on a contested crystal.
 - Export: `sips -s format png in.svg --out out.png`.
+
+## UX 15 pre-rendered images (entity budget <= 200)
+`src/gen_ux15.py` writes 63 PNGs into `png/` (about 0.58 MB, minified). `src/gen_ux15_sheet.py` writes `ux15-sheet.png` and `ux15-layout-check.png`, which puts the images at the Viewer.java positions with the live texts on top.
+- `crystal_{unlit,dormant,contested,lit0-3,decay0-3}_v{1,2,3}.png` (33 files; decay = unlit + owner emblem at 100 %, UX 17): 160x160 for a 128 cell. Scale by `cell/128` and centre on the cell. Glow, emblem (60 per 128 = 24.4 px at N19, 31 at N15), ring and `0` badge are baked in.
+- `coords_top_N{n}.png` (`n*cell` x 40, at `(x0, y0-40)`) and `coords_left_N{n}.png` (42 x `n*cell`, at `(x0-48, y0)`). sips draws end-anchored text about 4 px past the anchor, so the left labels are anchored at x 37.
+- `legend.png` 380x300. `boardbox.png` 380x140 at (40, 470), for every league (UX 16): `badge_zero` and `icon_crystal` rows, numbers live. The turnbox images are retired.
+- `panel_{0-3}.png` / `panel_{0-3}_wood.png` (the Wood one has no supply icon): 380x310. The fill has a transparent hole at the avatar box (28,24 112x112): draw the live avatar **under** the panel image, so the baked emblem badge stays on top.
+- `lamp_{id}_{E,S,W,N}.png` + `lamp_out_{E,S,W,N}.png`: 128. There is one image per direction, so the emblem stays upright; a rotated triangle would point sideways.
+- `yard_h.png` (5x3 cells) / `yard_v.png` (3x5): white, 128 per cell, 16 % fill and 0.8 dashed border baked in. Tint them with alpha 1.
+- `open_yard.png`: 380x310.

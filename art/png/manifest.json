@@ -6,7 +6,8 @@
    0,
    0
   ],
-  "tint": false
+  "tint": false,
+  "file": "background.jpg"
  },
  "floor_0": {
   "w": 128,
@@ -360,8 +361,8 @@
   "tint": false
  },
  "streak_badge": {
-  "w": 64,
-  "h": 51,
+  "w": 68,
+  "h": 84,
   "anchor": [
    0.5,
    0.5
@@ -369,10 +370,82 @@
   "tint": true
  },
  "streak_badge_dashed": {
-  "w": 64,
-  "h": 51,
+  "w": 68,
+  "h": 84,
   "anchor": [
    0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "icon_supply": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "icon_place": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "icon_turn": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "icon_wait": {
+  "w": 48,
+  "h": 48,
+  "anchor": [
+   0.5,
+   0.5
+  ],
+  "tint": true
+ },
+ "beam_solid_glow": {
+  "w": 32,
+  "h": 48,
+  "anchor": [
+   0,
+   0.5
+  ],
+  "tint": true
+ },
+ "beam_dash_glow": {
+  "w": 32,
+  "h": 48,
+  "anchor": [
+   0,
+   0.5
+  ],
+  "tint": true
+ },
+ "beam_dots_glow": {
+  "w": 32,
+  "h": 48,
+  "anchor": [
+   0,
+   0.5
+  ],
+  "tint": true
+ },
+ "beam_double_glow": {
+  "w": 32,
+  "h": 48,
+  "anchor": [
+   0,
    0.5
   ],
   "tint": true

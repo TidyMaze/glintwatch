@@ -7,72 +7,80 @@ import java.util.List;
 public final class Protocol {
     private Protocol() {}
 
-    public static List<String> initLines(Board b, int playerCount, int myId) {
-        return initLines(b, playerCount, myId, null);
+    // ---- V5.1c (DESIGN V5.8): the viewer is player 0, the others follow in clockwise seat order ----
+
+    /** Real player ids in relative order for this viewer: index = relative id. */
+    public static int[] relativeOrder(Game g, int viewer) {
+        int[] order = new int[g.playerCount];
+        int k = 0;
+        for (int step = 0; step < 4; step++) {
+            int seat = (g.seatOf[viewer] + step) % 4;
+            for (int id = 0; id < g.playerCount; id++) if (g.seatOf[id] == seat) order[k++] = id;
+        }
+        return order;
     }
 
-    /** F5 init; phases are shown only when cfg has tides (else -1). */
-    public static List<String> initLines(Board b, int playerCount, int myId, Config cfg) {
-        int[] seats = Seats.seatsFor(playerCount);
-        int[] playerOfSeat = {-1, -1, -1, -1};
-        for (int id = 0; id < playerCount; id++) playerOfSeat[seats[id]] = id;
+    static int relativeId(int[] order, int real) {
+        for (int k = 0; k < order.length; k++) if (order[k] == real) return k;
+        return -1;
+    }
+
+    /** Init: the reef (size*size chars, row by row; lamp letters by relative id), then the size. */
+    public static List<String> initLinesV5(Game g, int viewer) {
+        Board b = g.board;
+        int[] order = relativeOrder(g, viewer);
+        int[] relOfSeat = {-1, -1, -1, -1};
+        for (int k = 0; k < order.length; k++) relOfSeat[g.seatOf[order[k]]] = k;
+        StringBuilder reef = new StringBuilder();
+        for (int p = 0; p < b.n * b.n; p++) {
+            switch (b.kind[p]) {
+                case Board.WALL: reef.append('#'); break;
+                case Board.CRYSTAL: reef.append((char) ('0' + b.value[p])); break;
+                case Board.LAMP:
+                    int rel = relOfSeat[b.lampSeat[p]];
+                    reef.append(rel < 0 ? '.' : (char) ('A' + rel));
+                    break;
+                default: reef.append('.');
+            }
+        }
         List<String> lines = new ArrayList<>();
-        lines.add(playerCount + " " + myId);
+        lines.add(reef.toString());
         lines.add(String.valueOf(b.n));
-        for (int id = 0; id < playerCount; id++) {
-            int lamp = Seats.lampCell(seats[id], b.n, b.e);
-            lines.add(id + " " + Geometry.x(lamp, b.n) + " " + Geometry.y(lamp, b.n) + " " + Seats.lampDir(seats[id]));
-        }
-        for (int y = 0; y < b.n; y++) {
-            StringBuilder row = new StringBuilder();
-            for (int x = 0; x < b.n; x++) row.append(cellChar(b, Geometry.idx(x, y, b.n), playerOfSeat));
-            lines.add(row.toString());
-        }
-        List<String> crystals = new ArrayList<>();
-        for (int p = 0; p < b.n * b.n; p++)
-            if (b.kind[p] == Board.CRYSTAL)
-                crystals.add(Geometry.x(p, b.n) + " " + Geometry.y(p, b.n) + " " + b.value[p] + " "
-                    + (cfg != null && cfg.tides ? b.phase[p] : -1));
-        lines.add(String.valueOf(crystals.size()));
-        lines.addAll(crystals);
         return lines;
     }
 
-    private static char cellChar(Board b, int p, int[] playerOfSeat) {
-        switch (b.kind[p]) {
-            case Board.WALL: return '#';
-            case Board.CRYSTAL: return (char) ('0' + b.value[p]);
-            case Board.LAMP:
-                int id = playerOfSeat[b.lampSeat[p]];
-                return id < 0 ? '.' : (char) ('A' + id);
-            default: return '.';
-        }
+    /** Signed tide: k > 0 awake for k more turns (this one included), -k asleep for k more turns, 0 always awake. */
+    static int tide(Game g, int p, int turn) {
+        if (!g.cfg.tides) return 0;
+        int m = (turn + g.board.phase[p]) % g.cfg.tideCycle;
+        return m < g.cfg.tideAwake ? g.cfg.tideAwake - m : -(g.cfg.tideCycle - m);
     }
 
-    /** F5 per-turn input for one viewer: turn, players, mirrors and crystals sorted by (y, x). */
-    public static List<String> turnLines(Game g, int viewer) {
+    /** Turn: myScore + 4 hands (-1 eliminated or missing); mirrors x y type lock life (lock -1 = pending, life 0 = echo
+     *  of a mirror that shattered at the end of last turn); crystals tide litBy myStreak in reef order. */
+    public static List<String> turnLinesV5(Game g, int viewer) {
         Board b = g.board;
+        int[] order = relativeOrder(g, viewer);
         List<String> lines = new ArrayList<>();
-        lines.add(String.valueOf(g.currentTurn()));
-        for (int id = 0; id < g.playerCount; id++)
-            lines.add(g.score[id] + " " + g.mirrorsLeft[id] + " " + (g.active[id] ? 1 : 0));
-        List<String> mirrors = new ArrayList<>(), crystals = new ArrayList<>();
-        for (int p = 0; p < b.n * b.n; p++) {
-            String xy = Geometry.x(p, b.n) + " " + Geometry.y(p, b.n);
+        StringBuilder head = new StringBuilder().append(g.score[viewer]);
+        for (int k = 0; k < 4; k++) head.append(' ').append(k < order.length && g.active[order[k]] ? g.mirrorsLeft[order[k]] : -1);
+        lines.add(head.toString());
+        java.util.TreeMap<Integer, String> mirrors = new java.util.TreeMap<>();
+        for (int p = 0; p < b.n * b.n; p++)
             if (b.mirrorType[p] >= 0) {
-                boolean hidden = g.cfg.sealed && b.pending[p] > 0 && b.lastToucher[p] != viewer;
-                mirrors.add(xy + " " + (hidden ? -1 : b.mirrorType[p]) + " " + b.mirrorLock[p] + " " + b.pending[p] + " "
-                    + b.mirrorLife[p]);
+                boolean pending = b.pending[p] > 0, hidden = g.cfg.sealed && pending && b.lastToucher[p] != viewer;
+                mirrors.put(p, Geometry.x(p, b.n) + " " + Geometry.y(p, b.n) + " " + (hidden ? -1 : b.mirrorType[p]) + " "
+                    + (pending ? -1 : b.mirrorLock[p]) + " " + b.mirrorLife[p]);
             }
-            if (b.kind[p] == Board.CRYSTAL) {
-                StringBuilder sb = new StringBuilder(xy).append(' ').append(g.awake(p, g.currentTurn()) ? 1 : 0)
-                    .append(' ').append(g.litBy[p]);
-                for (int id = 0; id < g.playerCount; id++) sb.append(' ').append(g.streak[id][p]);
-                crystals.add(sb.toString());
-            }
-        }
+        for (int[] s : g.lastShattered) mirrors.put(s[0], Geometry.x(s[0], b.n) + " " + Geometry.y(s[0], b.n) + " " + s[1] + " 0 0");
         lines.add(String.valueOf(mirrors.size()));
-        lines.addAll(mirrors);
+        lines.addAll(mirrors.values());
+        List<String> crystals = new ArrayList<>();
+        for (int p = 0; p < b.n * b.n; p++)
+            if (b.kind[p] == Board.CRYSTAL) {
+                int by = g.litBy[p];
+                crystals.add(tide(g, p, g.currentTurn()) + " " + (by < 0 ? by : relativeId(order, by)) + " " + g.streak[viewer][p]);
+            }
         lines.add(String.valueOf(crystals.size()));
         lines.addAll(crystals);
         return lines;

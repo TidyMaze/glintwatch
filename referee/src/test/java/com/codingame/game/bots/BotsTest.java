@@ -26,8 +26,9 @@ class BotsTest {
     }
 
     private static String act(Bot bot, Game g, int id) {
-        bot.init(Protocol.initLines(g.board, g.playerCount, id, g.cfg));
-        return bot.act(Protocol.turnLines(g, id));
+        bot.init(Protocol.initLinesV5(g, id));
+        g.beginTurn();
+        return bot.act(Protocol.turnLinesV5(g, id));
     }
 
     @Test
@@ -35,33 +36,43 @@ class BotsTest {
         Board eb = example();
         eb.phase[Geometry.idx(6, 6, 13)] = 31;
         Game g = new Game(eb, 4, Config.silver());
-        Command[] c = waits(4);
-        c[0] = CommandParser.parse("PLACE 5 3 1");
-        g.playTurn(c);
-        g.playTurn(waits(4));
-        c = waits(4);
-        c[1] = CommandParser.parse("PLACE 9 6 0");
-        g.playTurn(waits(4));
-        g.playTurn(c);
-        g.playTurn(waits(4));
+        BotState[] states = new BotState[4];
+        for (int v = 0; v < 4; v++) {
+            states[v] = new BotState(Config.silver());
+            states[v].parseInit(Protocol.initLinesV5(g, v));
+        }
+        String[][] script = {{"PLACE 5 3 1", "WAIT", "WAIT", "WAIT"}, {"WAIT", "WAIT", "WAIT", "WAIT"}, {"WAIT", "WAIT", "WAIT", "WAIT"},
+            {"WAIT", "PLACE 9 6 0", "WAIT", "WAIT"}, {"WAIT", "WAIT", "WAIT", "WAIT"}};
+        for (String[] turn : script) {
+            g.beginTurn();
+            for (int v = 0; v < 4; v++) states[v].parseTurn(Protocol.turnLinesV5(g, v));
+            Command[] c = new Command[4];
+            for (int v = 0; v < 4; v++) c[v] = CommandParser.parse(turn[v]);
+            g.playTurn(c);
+        }
+        g.beginTurn();
         for (int viewer = 0; viewer < 4; viewer++) {
-            BotState s = new BotState(Config.silver());
-            s.parseInit(Protocol.initLines(g.board, 4, viewer, g.cfg));
-            s.parseTurn(Protocol.turnLines(g, viewer));
+            BotState s = states[viewer];
+            s.parseTurn(Protocol.turnLinesV5(g, viewer));
             Game r = s.game;
-            assertEquals(viewer, s.myId);
+            int[] order = Protocol.relativeOrder(g, viewer);
+            assertEquals(0, s.myId);
             assertArrayEquals(g.board.kind, r.board.kind);
             assertArrayEquals(g.board.value, r.board.value);
-            assertArrayEquals(g.board.phase, r.board.phase);
             assertArrayEquals(g.board.mirrorLock, r.board.mirrorLock);
             assertArrayEquals(g.board.pending, r.board.pending);
             assertArrayEquals(g.board.mirrorLife, r.board.mirrorLife);
+            for (int p = 0; p < 169; p++) if (g.board.kind[p] == Board.CRYSTAL) assertEquals(g.board.phase[p], r.board.phase[p], "phase " + p);
             assertEquals(g.turn, r.turn);
-            assertArrayEquals(g.score, r.score);
-            assertArrayEquals(g.mirrorsLeft, r.mirrorsLeft);
-            assertArrayEquals(g.litBy, r.litBy);
-            for (int id = 0; id < 4; id++) assertArrayEquals(g.streak[id], r.streak[id]);
+            for (int k = 0; k < 4; k++) {
+                assertEquals(g.seatOf[order[k]], r.seatOf[k]);
+                assertEquals(g.score[order[k]], r.score[k]);
+                assertEquals(g.mirrorsLeft[order[k]], r.mirrorsLeft[k]);
+                assertArrayEquals(g.streak[order[k]], r.streak[k]);
+            }
             for (int p = 0; p < 169; p++) {
+                int by = g.litBy[p];
+                assertEquals(by < 0 ? by : java.util.Arrays.stream(order).boxed().collect(java.util.stream.Collectors.toList()).indexOf(by), r.litBy[p]);
                 boolean hidden = g.board.pending[p] > 0 && g.board.lastToucher[p] != viewer;
                 assertEquals(hidden, s.unknownType[p]);
                 if (!hidden) assertEquals(g.board.mirrorType[p], r.board.mirrorType[p]);
@@ -130,11 +141,11 @@ class BotsTest {
                 bots.add(new GreedyBot(cfg, GreedyBot.Mode.SELF));
                 bots.add(new GreedyBot(cfg, GreedyBot.Mode.FULL));
                 bots.add(new GreedyBot(cfg, GreedyBot.Mode.PLUS));
-                for (int id = 0; id < 4; id++) bots.get(id).init(Protocol.initLines(g.board, 4, id, cfg));
+                for (int id = 0; id < 4; id++) bots.get(id).init(Protocol.initLinesV5(g, id));
                 while (!g.isOver()) {
                     Command[] c = new Command[4];
                     g.beginTurn();
-                    for (int id = 0; id < 4; id++) c[id] = CommandParser.parse(bots.get(id).act(Protocol.turnLines(g, id)));
+                    for (int id = 0; id < 4; id++) c[id] = CommandParser.parse(bots.get(id).act(Protocol.turnLinesV5(g, id)));
                     TurnReport r = g.playTurn(c);
                     for (int id = 0; id < 4; id++)
                         if (r.invalid[id] != null) assertEquals("collision", r.invalid[id], "seed " + seed + " id " + id);

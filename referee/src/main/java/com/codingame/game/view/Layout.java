@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.codingame.game.engine.Beam;
 import com.codingame.game.engine.Command;
+import com.codingame.game.engine.Dir;
 import com.codingame.game.engine.Geometry;
 
 /** Pixel layout of ux/UX.md sections 1, 2 and 12 (canvas 1920 x 1080); pure math, unit-tested. */
@@ -14,9 +15,20 @@ public final class Layout {
     public static final int BACKGROUND = 0x1A1D29, INK = 0x0E1018, FRAME = 0x3A4054, FLOOR_0 = 0x1B2D45, FLOOR_1 = 0x18283E,
         ROCK = 0x0A111D, ROCK_RIM = 0x6E7590, PANEL = 0x232736, TEXT = 0xE8EAF0, LABEL = 0xA0A6B8, WHITE = 0xF4F6FF,
         DANGER = 0xFF4D4D, CRYSTAL_GREY = 0x9AA0B4, DORMANT = 0x8E9BB3, SILVER = 0xD8DEEA, LOCK_OFF = 0x55617A;
-    public static final int PANEL_W = 380, PANEL_H = 300;
+    public static final int PANEL_W = 380, PANEL_H = 310;
+    /** UX 14: every canvas text is at least 36 px; turn box and legend sit at y 390. */
+    public static final int MIN_FONT = 36, MID_BOX_Y = 390;
+    /** UX 16: the board box (contested, awake) replaces the turn box. */
+    public static final int BOARD_BOX_Y = 470;
+    /** UX 14.3 option B: the streak chip shows one digit at 36 px, chip 36 x 40 centred on the cell corner. */
+    public static final int CHIP_W = 36, CHIP_H = 40;
+    /** UX 14 fix: coordinate labels keep 6 px from the board; the strike float is bold 40 and rises 30 px. */
+    public static final int COORD_GAP = 6, STRIKE_FONT = 40, STRIKE_RISE = 30;
+    public static final String[] LEGEND_WORDS = {"pays", "0 pts", "asleep", "pending", "locked", "yard"};
     /** Beam core pattern per player id (UX 2) and emblem sprite per player id (STYLE). */
     public static final String[] BEAM_PATTERN = {"beam_solid.png", "beam_dash.png", "beam_dots.png", "beam_double.png"};
+    /** Beam tiles with the glow baked in (32x48: glow band, pattern rows 16-31): one TilingSprite per segment. */
+    public static final String[] BEAM_GLOW_PATTERN = {"beam_solid_glow.png", "beam_dash_glow.png", "beam_dots_glow.png", "beam_double_glow.png"};
     public static final String[] EMBLEM = {"emblem_ring.png", "emblem_triangle.png", "emblem_square.png", "emblem_star.png"};
 
     public final int n, cell, x0, y0, beamWidth;
@@ -27,6 +39,15 @@ public final class Layout {
         x0 = (1920 - n * cell) / 2;
         y0 = 40 + (1000 - n * cell) / 2;
         beamWidth = Math.max(7, (int) Math.round(0.14 * cell));
+    }
+
+    /** Glow tile height 3w: the 16-row core of the 48-row tile is then exactly w. */
+    public int beamTileHeight() {
+        return 3 * beamWidth;
+    }
+
+    public double beamTileScale() {
+        return beamTileHeight() / 48.0;
     }
 
     /** Constant diagonal lane offset (d, d) of a seat's beam. */
@@ -48,7 +69,7 @@ public final class Layout {
 
     /** Panel origin per seat: seat 0 top-left, 1 top-right, 2 bottom-right, 3 bottom-left. */
     public static int[] panelOrigin(int seat) {
-        return new int[] {seat == 1 || seat == 2 ? 1500 : 40, seat >= 2 ? 740 : 40};
+        return new int[] {seat == 1 || seat == 2 ? 1500 : 40, seat >= 2 ? 730 : 40};
     }
 
     /** Lamp centre, each turning mirror centre, then the stop face (rock, lamp) or the board edge. */
@@ -140,11 +161,110 @@ public final class Layout {
         return type == 0 ? "/" : BACKSLASH_GLYPH;
     }
 
+    /** UX 14 fix: two-digit labels touch at N >= 17, so only even indices are labelled there. */
+    public static boolean coordLabelShown(int k, int n) {
+        return n < 17 || k % 2 == 0;
+    }
+
+    /** UX 14.1: a refusal is one word: zone, lock, empty (no mirror in hand) or cell. */
+    public static String refusedWord(String reason) {
+        if (reason.contains("zone")) return "zone";
+        if (reason.contains("locked") || reason.contains("pending")) return "lock";
+        if (reason.contains("in hand")) return "empty";
+        return "cell";
+    }
+
+    /** UX 14.1: the last action as {icon sprite, coordinates or refusal word}. */
+    public static String[] actionParts(Command c, String invalid) {
+        if (c == null) return new String[] {"", ""};
+        if (invalid != null) return new String[] {"icon_refused.png", refusedWord(invalid)};
+        if (c.kind == Command.Kind.PLACE) return new String[] {"icon_place.png", c.x + " " + c.y + " " + mirrorGlyph(c.type)};
+        if (c.kind == Command.Kind.TURN) return new String[] {"icon_turn.png", c.x + " " + c.y};
+        return new String[] {"icon_wait.png", ""};
+    }
+
+    /** UX 14.1: the first 14 characters of a message, then "...". */
+    public static String shortMessage(String m) {
+        return m.length() <= 14 ? m : m.substring(0, 14) + "...";
+    }
+
+    public static String streakDigit(int streak) {
+        return streak >= 2 ? String.valueOf(streak) : "";
+    }
+
+    public double[] streakChipCentre(int x, int y) {
+        return new double[] {x0 + (x + 1.0) * cell, y0 + (y + 1.0) * cell};
+    }
+
+    /** The tide rule shown in a crystal's tooltip (UX 14.3 B: the timer chip moves to the tooltip). */
+    public static String tideRule(int phase, int cycle, int awake) {
+        return "awake when (turn + " + phase + ") % " + cycle + " < " + awake;
+    }
+
     /** Panel last-action line (UX 1.1). */
     public static String actionLabel(Command c, String invalid) {
         if (c == null) return "";
         if (invalid != null) return invalid.equals("collision") ? "collision" : "refused: " + invalid;
         if (c.kind == Command.Kind.PLACE) return "PLACE " + c.x + " " + c.y + " " + mirrorGlyph(c.type);
         return c.text();
+    }
+
+    /** UX 15: pre-rendered crystal per state (dormant, contested, lit by a player, unlit) and value 1-3. */
+    public static String crystalImage(int litBy, boolean awake, int value) {
+        return crystalImage(litBy, awake, value, -1, 0);
+    }
+
+    /** UX 17: an awake unlit crystal whose best streak (2+, the chip) is fading shows its owner: crystal_decay{owner}. */
+    public static String crystalImage(int litBy, boolean awake, int value, int bestId, int bestStreak) {
+        String state = !awake ? "dormant" : litBy == -2 ? "contested" : litBy >= 0 ? "lit" + litBy
+            : bestId >= 0 && bestStreak >= 2 ? "decay" + bestId : "unlit";
+        return "crystal_" + state + "_v" + value + ".png";
+    }
+
+    /** One lamp image per direction keeps the emblem upright; an eliminated lamp shows the grey "out" image. */
+    public static String lampImage(int id, Dir d, boolean out) {
+        return out ? "lamp_out_" + d + ".png" : "lamp_" + id + "_" + d + ".png";
+    }
+
+    public static String yardImage(int cellsWide, int cellsHigh) {
+        return cellsWide >= cellsHigh ? "yard_h.png" : "yard_v.png";
+    }
+
+    public static String coordsImage(boolean top, int n) {
+        return (top ? "coords_top_N" : "coords_left_N") + n + ".png";
+    }
+
+    /** Panel per player id; the Wood one (no supply) has no supply icon. */
+    public static String panelImage(int id, boolean supply) {
+        return "panel_" + id + (supply ? "" : "_wood") + ".png";
+    }
+
+    /** UX 15.2 chip "x,y,digit,colour,dashed,dimmed": colour 4 = white (contested); a fading streak is dashed and dimmed. */
+    public static String chipRecord(int x, int y, int streak, int bestId, int litBy) {
+        String digit = streakDigit(streak);
+        if (digit.isEmpty()) return "";
+        boolean contested = litBy == -2, decaying = !contested && litBy != bestId;
+        return x + "," + y + "," + digit + "," + (contested ? 4 : bestId) + "," + (contested || decaying ? 1 : 0) + "," + (decaying ? 1 : 0);
+    }
+
+    /** UX 15.2 mirror "x,y,type,pending,toucher,wear,arcs". */
+    public static String mirrorRecord(int x, int y, int type, boolean pending, int toucher, int life, int lock) {
+        return x + "," + y + "," + type + "," + (pending ? 1 : 0) + "," + toucher + "," + wearTier(life) + "," + litArcs(lock);
+    }
+
+    /** Beam polyline "x,y,x,y,..." in rounded canvas pixels. */
+    public static String pointsRecord(List<double[]> pts) {
+        StringBuilder sb = new StringBuilder();
+        for (double[] p : pts) sb.append(sb.length() == 0 ? "" : ",").append(Math.round(p[0])).append(',').append(Math.round(p[1]));
+        return sb.toString();
+    }
+
+    /**
+     * UX 14 fix 2: "+2" float position for shooter id on a lamp firing d (d points into the board): one cell in from
+     * the lamp, shooters spread 20 px apart across d, and at rise = 1 it has moved STRIKE_RISE further in.
+     */
+    public double[] strikeFloat(double[] lamp, Dir d, int id, double rise) {
+        double side = (id - 1.5) * 20, in = cell + rise * STRIKE_RISE;
+        return new double[] {lamp[0] + d.dx * in - d.dy * side, lamp[1] + d.dy * in + d.dx * side};
     }
 }

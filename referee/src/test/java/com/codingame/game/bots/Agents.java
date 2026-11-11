@@ -34,22 +34,16 @@ public final class Agents {
     public static void loop(Bot bot, java.io.InputStream stdin, java.io.PrintStream stdout) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(stdin));
         List<String> init = new ArrayList<>();
-        String first = in.readLine();
-        if (first == null) return;
-        init.add(first);
-        int players = Integer.parseInt(first.split(" ")[0]);
-        String nLine = in.readLine();
-        init.add(nLine);
-        int n = Integer.parseInt(nLine.trim());
-        for (int i = 0; i < players + n; i++) init.add(in.readLine());
-        readBlock(in, init);
+        String reef = in.readLine();
+        if (reef == null) return;
+        init.add(reef);
+        init.add(in.readLine());
         bot.init(init);
         while (true) {
             List<String> turn = new ArrayList<>();
-            String turnLine = in.readLine();
-            if (turnLine == null) return;
-            turn.add(turnLine);
-            for (int i = 0; i < players; i++) turn.add(in.readLine());
+            String head = in.readLine();
+            if (head == null) return;
+            turn.add(head);
             readBlock(in, turn);
             readBlock(in, turn);
             stdout.println(bot.act(turn));

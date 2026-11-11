@@ -2,12 +2,14 @@ import { GraphicEntityModule } from './entity-module/GraphicEntityModule.js';
 import { TooltipModule } from './tooltip-module/TooltipModule.js';
 import { EndScreenModule } from './endscreen-module/EndScreenModule.js';
 import { ToggleModule } from './toggle-module/ToggleModule.js';
+import { BoardModule } from './board-module/BoardModule.js';
 
 export const modules = [
 	GraphicEntityModule,
 	TooltipModule,
 	EndScreenModule,
-	ToggleModule
+	ToggleModule,
+	BoardModule
 ];
 
 // Okabe-Ito player colours (art STYLE), by player id

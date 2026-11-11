@@ -17,7 +17,7 @@ class BatchRunnerTest {
         assertArrayEquals(a.wins, b.wins, 1e-9);
         assertArrayEquals(a.totalScore, b.totalScore);
         assertEquals(0, a.crashes);
-        assertEquals(150.0, a.avgTurns(), 1e-9);
+        assertTrue(a.avgTurns() <= 150.0 && a.avgTurns() >= 100.0, "V5.5 early end may stop a game before turn 150: " + a.avgTurns());
         assertTrue(a.totalScore[1] >= 0, "WAIT can be bent by neutral mirrors");
         assertTrue(a.refereeMsPerTurn() >= 0);
     }

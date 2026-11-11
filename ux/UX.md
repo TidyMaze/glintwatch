@@ -227,3 +227,125 @@ Cover: 1200x675 (art/cover.png). Unverified: neither a web search nor the CG con
 - Floor: one tiling `floor_0` (no per-cell checker, no floor tooltips); coordinates are drawn in the margins instead.
 - Crystal tooltip is static: `(x, y) v pt, phase p`. Owner and streak are read from the colour, the owner emblem and the x2-x4 chip.
 - `\` mirror type is shown as U+2572 in texts (a raw backslash breaks SDK text).
+
+## 14. CG best practices: text >= 36 px, assets < 2 MB (owner order 2026-11-11; overrides the sections above)
+Rule applied to every canvas `Text` entity at 1920x1080. Tooltips (TooltipModule, HTML overlays) are out of scope (lead, 2026-11-11) but stay readable. The CG end screen is CG's own.
+
+### 14.1 Text inventory and change
+| Text | Was | Now |
+|---|---|---|
+| Panel name | bold 30 | bold 36, cut to 200 px with "..." |
+| Panel score | bold 72 | unchanged |
+| Hand row `3 /6  +1 in 3`, `3 lit` | 32 + 22 labels | icons + numbers only, bold 36: `icon_mirror 3/6`, `icon_supply 3`, `icon_crystal 3` (no words; the legend names the icons) |
+| Last action | bold 28 | bold 36, icon + coordinates: `icon_place 10 12 ╲`, `icon_turn 3 8`, `icon_wait`, refused = `icon_refused` + one word (`zone`, `lock`, `cell`, `empty`) in Danger |
+| Gain `+N` | bold 34 | bold 36, right-aligned on the action line |
+| Message | 24 | regular 36, first 14 chars + "...", full text in the panel tooltip |
+| Turn box | "TURN" 24, `37 / 150` 72/36, 3 rows 24/28 | no "TURN" label; `37/150` 72 + `/150` 36; 3 rows icon + bold 36: `icon_supply 3`, `badge_zero 1`, `icon_crystal 17/21` |
+| Legend | 8 rows 24 + sub-line 20 + beam key 22 | 6 rows, icon 36 + one word bold 36: `pays`, `0 pts` (contested), `asleep`, `pending`, `locked`, `yard`. Beam key and the empty-seat line leave the legend (14.2) |
+| Coordinates | 20 | regular 36 `#A0A6B8`, top margin and left margin only |
+| Strike `+2` float | bold 34 | bold 40 |
+| Crystal value digit | bold 0.30*cell | **removed**: size + facets carry the value (artist finding), tooltip gives it |
+| Contested `0` | Text 17 | sprite `badge_zero.png` (icon, not text) |
+| Streak `x2-x4` chip | Text 17-21 | Text bold 36 digit `2` `3` `4` (no `x`), see 14.3 |
+| Phase timer chip | Text 17-21 | removed from the board; phase is in the crystal tooltip (static `phase p`) |
+
+### 14.2 Layout
+- Panels 380 x 310 at y 40 and y 730 (was 300 at 40 / 740); turn box and legend 380 x 300 at y 390. Rows: name 56, score 130, icon row 190, divider 220, action 262, message 298 (baselines).
+- Beam key moves to the panels: the 12 px colour strip on the left of each panel becomes a vertical strip of that player's beam pattern (`beam_*.png` rotated 90 deg, 16 px wide).
+- `empty seat: open to all` moves to the empty panel slot (2p: seats 1, 3; 3p: seat 3): a dashed `#3A4054` box with `open yard` bold 36. 4p has no empty seat, so no line.
+
+### 14.3 Board streak chip: option B (owner decision 2026-11-11)
+- Text bold 36 digit `2`/`3`/`4`, nothing at x1, no `x`. Ink pill 34 x 42, radius 17, 2 px border.
+- Anchor: pill centre on the crystal cell's bottom-right corner (it overlaps the 3 neighbour cells by up to 17 px; accepted by the owner).
+- z: above mirrors (60), below lamps (70), so a neighbour mirror never hides it.
+- Colours: sole lighter = digit and border in its colour; contested (frozen) = white digit, dashed white border; decaying = owner colour at 60 % opacity, dashed border.
+- Timer: no chip; tooltips (HTML, out of scope for the 36 px rule) carry the phase.
+- Sprites: `streak_badge.png` / `streak_badge_dashed.png` scaled to 34 x 42 (no new art).
+
+### 14.4 Assets (shipped `referee/src/main/resources/view/assets`: 1.47 MB, 45 files, measured)
+- `background.png` is 1.24 MB of it: export as JPEG q80 (`sips -s format jpeg -s formatOptions 80`): 49 KB measured. Total then ~0.28 MB.
+- Every PNG: re-export minified (`cwebp` is installed but CG needs png/jpg; no pngquant/optipng here: crop to content, 8-bit where the sprite has <= 256 colours).
+- New sprites: `icon_supply`, `icon_place`, `icon_turn`, `icon_wait` (48 px, white, tinted): delivered.
+
+## 15. Entity budget <= 200 (QA audit: 1142 entity ids over a game on seed 301, N=19, 4p; 349 in frame 0)
+Rule as QA measures it: entity ids created over the whole game, worst map. So every entity is created in frame 0
+(or in a fixed pool) and only changed after (setImage, tint, alpha, visible, x/y). Source: CG help center "Creating your own puzzle", Best Practices > Gameplay: "The total entities should not exceed 200" (read by the lead).
+Decision (lead, 2026-11-11): BoardModule path (15.2); frame data < 30 KB/frame and < 1 MiB/replay.
+
+Worst-map counts used (DESIGN 3.3 bounds, N=19): crystals `4K+1 <= 61`, rocks `<= 24`, lamps 4, live mirrors
+`<= 52` (16 start + 4 x 9 placed by turn 20; later <= 4 x 12), beam segments per beam = mirrors on its path + 1.
+
+### 15.1 GEM-only budget: does not fit without hiding game state
+| Group | Entities | How |
+|---|---|---|
+| Static: background (board frame baked in), floor tiling, 2 coordinate strips (pre-rendered per N, 8 PNGs), 4 yard sprites (fill + dashed border baked), legend (1 pre-rendered sprite, 36 px text baked), turn-box image, 4 panel images (fill, frame, pattern strip, divider, static icons, emblem baked) | 14 | |
+| Rocks, lamps (nose + emblem baked; eliminated = setImage) | 28 | |
+| Crystals: 1 sprite each, state = setImage (unlit, dormant, lit_s0-3 with glow + emblem baked, contested with ring + 0 badge baked), value = scale | 61 | tooltip on this sprite |
+| Streak chips (unscaled 34x42, Text digit) | 52+ worst | 1 sprite + 1 Text each |
+| Mirrors: 1 sprite each (images per toucher colour x lock 0-5 x wear 3 + pending x 4: ~76 PNGs), pooled | 52 | tooltip on this sprite |
+| Beams: 1 TilingSprite per segment (glow baked in the tile), pooled | 60+ worst | |
+| Panels dynamic: avatar, name, score, hand, lit, action icon, action text, gain, message | 36 | |
+| Turn box dynamic: turn, progress bar, supply, contested, awake | 5 | |
+| Effects pools: highlight 4, spark 2, `+2` 2 | 8 | |
+| **Total** | **~370** | even with chips cut to 16 and beams to 24 it stays ~232 |
+
+GEM-only reaches 200 only by dropping state from the board (chips, beam segments or mirrors beyond a pool), which breaks
+"the viewer must show the game". Not acceptable.
+
+### 15.2 Recommended: a custom `BoardModule` (SDK "Extend the CodinGame SDK": a view module drawing with PixiJS)
+| Group | GEM entities |
+|---|---|
+| Static (15.1 row 1) | 14 |
+| Rocks + lamps | 28 |
+| Crystals (stay in GEM: static ids, setImage only, carry the TooltipModule tooltips) | 61 |
+| Panels + turn box dynamic | 41 |
+| Effects pools | 8 |
+| **Total GEM** | **152** (48 spare) |
+
+The BoardModule draws mirrors, lock rings, wear, pending rings, beams (glow + pattern), streak chips and turn highlights from
+compact per-frame data the referee sends (mirrors `x y type lock pending life toucher`, chips `x y digit style`,
+beam polylines as turning-cell lists): Pixi objects pooled inside the module, not GEM entities; frame data also shrinks.
+Mirror tooltips move into the module (hover on its own sprites) or are dropped (mirror state is visible on the board).
+Fonts and sizes of UX.md 14 apply inside the module too. Cost: one JS module (~300 lines) + referee serialisation: coder to estimate.
+
+### 15.3 Rules for every entity (both variants)
+- Create everything in frame 0 or in a pool sized from the worst seed; never create per placement or per turn.
+- One Text per value that changes; static words and icons are baked into the panel, turn-box and legend images.
+- Tooltips only on entities that already exist (crystals, rocks, lamps, panels); no invisible hit boxes.
+- Coordinates: 2 sprites, not 38 Texts. Contested flicker animation dropped (the contested image carries the ring).
+
+## 16. No turn display (owner order 2026-11-11; overrides 1, 12, 14, 15)
+The CG player already shows the turn, so the viewer drops the turn number, `/150` and the progress bar.
+What the box held besides the turn (measured in `Viewer.turnBox`):
+- supply countdown: dropped from the box, because every panel already shows it (supply icon + number);
+- contested count and awake count `17/21`: **kept** (board summary at a glance, not shown anywhere else as numbers);
+- early-end reason: never in the box (game summary only); unchanged.
+
+New box: **"board" box 380 x 140 at (40, 470)**, two rows, icon + bold 36: `badge_zero` + contested count (y 470+28),
+`icon_crystal` + `awake/total` (y 470+84). Images: `boardbox.png` (one image for every league; in Wood, where crystals
+never sleep, the awake row shows `total/total`). `turnbox.png` and `turnbox_wood.png` are retired.
+Entities saved: 4 (turn Text, `/150` Text, progress Rectangle, supply Text).
+
+## 17. Colour-blind re-check on v14 screenshots (2026-11-11)
+Measured on `referee/screens/v14-glow-tiles-silver-n19-seed301-4p.png` (rendered colours: median of board pixels within
+CIELAB 18 of each player colour, 1192-5244 px each; floor = median of dark board pixels) and on `art/png/boardbox.png`.
+Simulation: Machado 2009 severity 1.0; distance CIE76 dE; contrast WCAG 2.
+
+| Check | Normal | Protan | Deutan | Tritan | Verdict |
+|---|---|---|---|---|---|
+| Closest player pair (rendered) | 56.7 Sky/Orchid | 20.7 Sky/Orchid | 18.3 Jade/Orchid | 16.5 Sky/Jade | same as STYLE (dE 16): colour alone is not enough, second cue required |
+| Player colour vs floor `#18283E` (min) | 58.7 | 41.3 | 48.2 | 49.0 | pass |
+| Player colour vs contested white (min) | 42.6 | 36.5 | 34.1 | 46.1 | pass |
+| Beam vs floor contrast | Sky 6.45, Amber 6.60, Jade 4.30, Orchid 4.86 | | | | pass (>= 3, graphics) |
+| Panel name/score colour vs panel `#232736` | 6.43 / 6.59 / 4.29 / 4.85 | | | | pass (bold >= 36 px = large text, >= 3) |
+| Streak chip digit vs ink pill `#0E1018` | 8.23 / 8.43 / 5.48 / 6.20 | | | | pass |
+| Board box text `#E8EAF0` / icons `#F4F6FF` vs fill `#232736` | 12.34 / 13.76 | dE 76.9 | 77.4 | 76.7 | pass |
+
+Second cue per element: beams = pattern (solid, dash, dots, double) + lane, visible in the v14 shot at full and half size;
+lit crystals = owner emblem (24.4 px at N19); panels = emblem + screen side + strip pattern; lamps = emblem;
+contested = white + ring + `0`; locks/pending rings = position on the toucher's own mirror (tooltip-free cue: none).
+**Finding (fixed by decision)**: a decaying streak chip on an *unlit* crystal names its owner by colour only (no emblem
+on that crystal). Fix: new crystal state `crystal_decay{0-3}_v{1,2,3}.png` = unlit crystal + owner emblem at 100 %
+opacity (50 % measured 2.04-2.64:1 on the floor, under 3:1; the grey gem already tells it from lit); same sprite, setImage only, 0 extra entities. Lock-ring colour (last toucher) stays colour-only: secondary
+information, accepted.
+Verdict: **PASS** after the decay-emblem fix; nothing else changed by UX 14.
