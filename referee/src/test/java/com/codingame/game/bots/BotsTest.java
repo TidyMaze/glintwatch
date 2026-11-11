@@ -104,43 +104,15 @@ class BotsTest {
     }
 
     @Test
-    void greedyStealsTheRivalLaneOnTheCrossing() throws Exception {
-        Board b = example();
-        b.setMirror(9, 6, 0);
-        Game g = new Game(b, 4, Config.woodOne());
-        assertEquals("PLACE 9 3 1", act(new GreedyBot(Config.woodOne(), GreedyBot.Mode.FULL), g, 0));
-        assertEquals("PLACE 9 3 1", act(new GreedyBot(Config.woodOne(), GreedyBot.Mode.SELF), g, 0));
-        assertEquals("PLACE 9 3 1", act(new GreedyBot(Config.woodOne(), GreedyBot.Mode.PLUS), g, 0));
-    }
-
-    @Test
-    void greedySelfTakesTheRichestOwnLaneIgnoringContest() throws Exception {
-        Game g = new Game(example(), 4, Config.woodOne());
-        assertEquals("PLACE 6 3 1", act(new GreedyBot(Config.woodOne(), GreedyBot.Mode.SELF), g, 0));
-    }
-
-    @Test
-    void greedyWaitsWhenNothingScores() {
-        Game g = new Game(Board.empty(13, 3), 4, Config.woodOne());
-        assertEquals("WAIT", act(new GreedyBot(Config.woodOne(), GreedyBot.Mode.FULL), g, 0));
-    }
-
-    @Test
-    void greedyUnderBuildDelayScoresItsOwnMirrorAsIfActive() {
-        Game g = new Game(example(), 4, Config.bronze());
-        assertEquals("PLACE 6 3 1", act(new GreedyBot(Config.bronze(), GreedyBot.Mode.FULL), g, 0));
-    }
-
-    @Test
-    void randomAndGreedyBotsNeverSendAnInvalidCommandOverFullGames() throws Exception {
+    void randomBotsNeverSendAnInvalidCommandOverFullGames() throws Exception {
         for (long seed = 0; seed < 6; seed++)
             for (Config cfg : new Config[] {Config.woodTwo(), Config.woodOne(), Config.bronze(), Config.silver()}) {
                 Game g = Game.fromSeed(seed, 4, cfg);
                 List<Bot> bots = new ArrayList<>();
                 bots.add(new RandomBot(cfg, seed));
-                bots.add(new GreedyBot(cfg, GreedyBot.Mode.SELF));
-                bots.add(new GreedyBot(cfg, GreedyBot.Mode.FULL));
-                bots.add(new GreedyBot(cfg, GreedyBot.Mode.PLUS));
+                bots.add(new RandomBot(cfg, seed + 1));
+                bots.add(new RandomBot(cfg, seed + 2));
+                bots.add(new Agents.WaitBot());
                 for (int id = 0; id < 4; id++) bots.get(id).init(Protocol.initLinesV5(g, id));
                 while (!g.isOver()) {
                     Command[] c = new Command[4];

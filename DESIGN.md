@@ -530,21 +530,15 @@ its unused mirrors are gone, its placed mirrors stay (neutral).
 
 ## 7. Leagues
 
-| League | Rules added | Boss |
-|---|---|---|
-| Wood 2 | PLACE, WAIT; no walls, no start mirrors, crystals value 1; shared scoring (6.2 Wood 2); 100 turns | `WAIT` every turn |
-| Wood 1 | TURN and locks; walls; start mirrors; contested crystals score 0; 150 turns | Greedy-self |
-| Bronze | crystal values 1-3; strike | Greedy-full |
+| League | Rules added |
+|---|---|
+| Wood 2 | PLACE, WAIT; no walls, no start mirrors, crystals value 1; shared scoring (6.2 Wood 2); 100 turns |
+| Wood 1 | TURN and locks; walls; start mirrors; contested crystals score 0; 150 turns |
+| Bronze | crystal values 1-3; strike |
 
 Zones exist in all leagues. Community leagues above Bronze use Bronze rules.
 
-- **Greedy-self** (Wood 1 boss): candidate actions = WAIT, then every legal PLACE (both types) on an Empty cell of
-  its own current beam path, then every legal TURN of a mirror on that path. For each, simulate the board with only
-  this action and trace **its own beam only**; value = sum of crystal values it lights (no contest check).
-  Pick the max; ties keep the first in list order (so WAIT unless strictly better). Path cells in list order of
-  the trace.
-- **Greedy-full** (Bronze boss): same candidates, but traces all active beams with the others' actions = WAIT and
-  scores `ownGain - 0.5 * max over opponents of their gain`, with contest and strike rules.
+Boss and test-bot details are kept private.
 
 ## 8. Starter AI (stub)
 Reads all inputs and prints `WAIT`. The stub comment says: "Your lamp fires east-like along its line; put a
@@ -572,9 +566,9 @@ mirror on that line to bend it towards crystals." (Stub generator: `read`/`loop`
 | Mirror placed on own lamp line just outside zone by a rival | own zone mirrors bend the beam before it gets there |
 
 ### Metrics (for game-analyst)
-- Seat fairness: over 1000 games Greedy-full x4 on random seeds, win rate per seat 25 % +/- 3 %.
+- Seat fairness: over 1000 games of four identical bots on random seeds, win rate per seat 25 % +/- 3 %.
 - Draws (all 4 equal): < 5 % of games between different bots.
-- Greedy-full beats Greedy-self >= 80 % in 1v1; WAIT bot scores 0 in 100 % of games.
+- WAIT bot scores 0 in 100 % of games.
 - Contested crystals per turn after turn 50: 10-30 % of lit crystals (too low = no interaction, too high = chaos).
 - Referee time per turn < 1 ms; game length = 150 turns in > 95 % of games.
 
@@ -801,9 +795,6 @@ Statement wording: "a mirror starts reflecting 2 turns after it is placed".
 | Wood 2 | as v1 Wood 2 (stock 12, no streak) |
 | Wood 1 | + TURN, LOCK 5, walls, start mirrors, contest, streak (C3) |
 | Bronze | + values 1-3, strike, build delay (C1), sealed type (C2) |
-Bosses: Wood 1 = Greedy-self, Bronze = Greedy-full (v1 definitions, scoring this turn's gain with the v2 rules,
-pending mirrors treated as Empty). They are the "obvious greedy" the test below must beat.
-
 ## V2.6 Hardness test (game-analyst, before the arena)
 Boss and test-bot details are kept private.
 

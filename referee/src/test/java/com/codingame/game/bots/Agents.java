@@ -16,14 +16,11 @@ public final class Agents {
         return Config.forLeague(Integer.getInteger("glintwatch.league", 3));
     }
 
-    /** Builds a bot by name: wait, random, self, greedy, plus, crash. */
+    /** Builds a bot by name: wait, random, crash, slow. */
     public static Bot create(String name, Config cfg, long seed) {
         switch (name) {
             case "wait": return new WaitBot();
             case "random": return new RandomBot(cfg, seed);
-            case "self": return new GreedyBot(cfg, GreedyBot.Mode.SELF);
-            case "greedy": return new GreedyBot(cfg, GreedyBot.Mode.FULL);
-            case "plus": return new GreedyBot(cfg, GreedyBot.Mode.PLUS);
             case "crash": return new CrashBot();
             case "slow": return new SlowBot();
             default: throw new IllegalArgumentException("unknown bot " + name);
@@ -62,19 +59,8 @@ public final class Agents {
     }
 
     public static class Random {
-        public static void main(String[] a) throws IOException { loop(new RandomBot(cfg(), 1), System.in, System.out); }
-    }
-
-    public static class Self {
-        public static void main(String[] a) throws IOException { loop(new GreedyBot(cfg(), GreedyBot.Mode.SELF), System.in, System.out); }
-    }
-
-    public static class Greedy {
-        public static void main(String[] a) throws IOException { loop(new GreedyBot(cfg(), GreedyBot.Mode.FULL), System.in, System.out); }
-    }
-
-    public static class Plus {
-        public static void main(String[] a) throws IOException { loop(new GreedyBot(cfg(), GreedyBot.Mode.PLUS), System.in, System.out); }
+        /** Seed from -Dglintwatch.botSeed (default 1): the engine's BatchRunner seeds its random bot with the game seed. */
+        public static void main(String[] a) throws IOException { loop(new RandomBot(cfg(), Long.getLong("glintwatch.botSeed", 1L)), System.in, System.out); }
     }
 
     /** WAIT on turn 1, then sleeps past the 50 ms turn limit: the referee must eliminate it for timeout. */

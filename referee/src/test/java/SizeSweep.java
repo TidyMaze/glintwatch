@@ -5,9 +5,8 @@ import com.codingame.gameengine.runner.simulate.GameResult;
 
 public class SizeSweep {
     public static void main(String[] a) {
-        Class<?>[][] mixes = {{Agents.Random.class, Agents.Random.class, Agents.Random.class, Agents.Random.class},
-            {Agents.Plus.class, Agents.Plus.class, Agents.Plus.class, Agents.Plus.class}};
-        String[] names = {"random4", "plus4"};
+        Class<?>[][] mixes = {{Agents.Random.class, Agents.Random.class, Agents.Random.class, Agents.Random.class}};
+        String[] names = {"random4"};
         for (int league = 3; league <= 4; league++)
             for (int m = 0; m < mixes.length; m++)
                 for (long seed = 0; seed < 40 ; seed++) {

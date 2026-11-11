@@ -4,9 +4,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-import com.codingame.game.bots.BatchRunner;
 import com.codingame.game.bots.Agents;
+import com.codingame.game.bots.Bot;
+import com.codingame.game.bots.BatchRunner;
+import com.codingame.game.bots.RandomBot;
+import com.codingame.game.engine.Command;
+import com.codingame.game.engine.CommandParser;
 import com.codingame.game.engine.Config;
+import com.codingame.game.engine.Game;
+import com.codingame.game.engine.Protocol;
 import com.codingame.gameengine.runner.MultiplayerGameRunner;
 import com.codingame.gameengine.runner.simulate.GameResult;
 
@@ -43,11 +49,11 @@ public class RefereeTest {
         System.setProperty("glintwatch.diag", "true");
         GameResult on;
         try {
-            on = run(1, 9L, Agents.Wait.class, Agents.Greedy.class);
+            on = run(1, 9L, Agents.Wait.class, Agents.Random.class);
         } finally {
             System.clearProperty("glintwatch.diag");
         }
-        GameResult off = run(1, 9L, Agents.Wait.class, Agents.Greedy.class);
+        GameResult off = run(1, 9L, Agents.Wait.class, Agents.Random.class);
         String onErr = stderr(on), offErr = stderr(off);
         assertTrue(onErr.contains("[glintwatch] init start") && onErr.contains("[glintwatch] turn 1 done"), onErr);
         assertEquals("", offErr.trim(), "no referee stderr in shipped mode");
@@ -60,24 +66,34 @@ public class RefereeTest {
             .filter(java.util.Objects::nonNull).toArray(String[]::new));
     }
 
+    /** The random agents take their seed from glintwatch.botSeed, set to the game seed, as the engine's BatchRunner does. */
+    private static GameResult runWithBotSeed(int league, long seed, Class<?>... agents) {
+        System.setProperty("glintwatch.botSeed", String.valueOf(seed));
+        try {
+            return run(league, seed, agents);
+        } finally {
+            System.clearProperty("glintwatch.botSeed");
+        }
+    }
+
     @Test
     void sdkRefereeMatchesTheEngineScoresForTheSameSeed() {
-        GameResult r = run(3, 42L, Agents.Greedy.class, Agents.Self.class, Agents.Wait.class, Agents.Plus.class);
-        BatchRunner.Result e = BatchRunner.run(new String[] {"greedy", "self", "wait", "plus"}, 1, 42L, Config.bronze());
+        GameResult r = runWithBotSeed(3, 42L, Agents.Random.class, Agents.Random.class, Agents.Wait.class, Agents.Random.class);
+        BatchRunner.Result e = BatchRunner.run(new String[] {"random", "random", "wait", "random"}, 1, 42L, Config.bronze());
         for (int i = 0; i < 4; i++) assertEquals(e.totalScore[i], r.scores.get(i).intValue(), "player " + i);
     }
 
     @Test
     void silverRefereeMatchesTheEngine() {
-        GameResult r = run(4, 7L, Agents.Plus.class, Agents.Greedy.class, Agents.Self.class);
-        BatchRunner.Result e = BatchRunner.run(new String[] {"plus", "greedy", "self"}, 1, 7L, Config.silver());
+        GameResult r = runWithBotSeed(4, 7L, Agents.Random.class, Agents.Random.class, Agents.Random.class);
+        BatchRunner.Result e = BatchRunner.run(new String[] {"random", "random", "random"}, 1, 7L, Config.silver());
         for (int i = 0; i < 3; i++) assertEquals(e.totalScore[i], r.scores.get(i).intValue(), "player " + i);
     }
 
     @Test
     void viewerRaisesNoRefereeErrorAndStaysUnderTheSdkSoftViewQuota() {
         for (int league = 1; league <= 4; league++) {
-            GameResult r = run(league, 11L, Agents.Plus.class, Agents.Greedy.class, Agents.Self.class, Agents.Random.class);
+            GameResult r = run(league, 11L, Agents.Random.class, Agents.Random.class, Agents.Random.class, Agents.Random.class);
             for (String err : r.errors.getOrDefault("referee", java.util.Collections.emptyList()))
                 assertTrue(isDiagnostic(err), "league " + league + ": " + err);
             long size = 0;
@@ -92,7 +108,7 @@ public class RefereeTest {
     void everyFrameStaysUnderTheRunnerReadBufferOnTheLargestBoards() {
         long[][] cases = {{4, 301}, {3, 301}, {4, 34}, {2, 1}}; // 301: fullest N=19 map of seeds 0..4999
         for (long[] c : cases) {
-            GameResult r = run((int) c[0], c[1], Agents.Plus.class, Agents.Plus.class, Agents.Plus.class, Agents.Plus.class);
+            GameResult r = run((int) c[0], c[1], Agents.Random.class, Agents.Random.class, Agents.Random.class, Agents.Random.class);
             int max = 0, at = -1;
             for (int i = 0; i < r.views.size(); i++) {
                 String v = r.views.get(i);
@@ -112,7 +128,7 @@ public class RefereeTest {
     void viewerCreatesAtMostTwoHundredEntitiesOverTheFullestGame() {
         long[][] cases = {{4, 301}, {3, 301}, {2, 301}, {1, 301}, {4, 34}};
         for (long[] c : cases) {
-            GameResult r = run((int) c[0], c[1], Agents.Plus.class, Agents.Greedy.class, Agents.Self.class, Agents.Random.class);
+            GameResult r = run((int) c[0], c[1], Agents.Random.class, Agents.Random.class, Agents.Random.class, Agents.Random.class);
             int created = createdEntities(r.views);
             System.out.println("league " + c[0] + " seed " + c[1] + " entities created " + created);
             assertTrue(created <= 200, "league " + c[0] + " seed " + c[1] + ": " + created + " entities");
@@ -123,7 +139,7 @@ public class RefereeTest {
     @Test
     void viewerShowsNoTurnNumber() {
         for (int league : new int[] {1, 4}) {
-            GameResult r = run(league, 5L, Agents.Plus.class, Agents.Greedy.class);
+            GameResult r = run(league, 5L, Agents.Random.class, Agents.Random.class);
             for (String v : r.views) {
                 if (v == null) continue;
                 for (String banned : new String[] {"Turn", "t=", "/150", "/100"})
@@ -133,13 +149,32 @@ public class RefereeTest {
     }
 
     /** Help Center "The referee must not crash": an unexpected exception ends the game cleanly, scores kept, with a summary line. */
+    /** Scores after the last complete turn: the same bots played by the engine, turn by turn, with no referee. */
+    private static int[] scoresAfterTurns(int league, long seed, int players, int turns) throws Exception {
+        Config cfg = Config.forLeague(league);
+        Game g = Game.fromSeed(seed, players, cfg);
+        Bot[] bots = new Bot[players];
+        for (int id = 0; id < players; id++) bots[id] = new RandomBot(cfg, seed);
+        for (int id = 0; id < players; id++) bots[id].init(Protocol.initLinesV5(g, id));
+        for (int t = 0; t < turns; t++) {
+            g.beginTurn();
+            Command[] c = new Command[players];
+            for (int id = 0; id < players; id++) c[id] = CommandParser.parse(bots[id].act(Protocol.turnLinesV5(g, id)));
+            g.playTurn(c);
+        }
+        return g.score.clone();
+    }
+
     @Test
-    void anExceptionInATurnEndsTheGameCleanlyInsteadOfCrashing() {
-        Referee.failAt = "turn 7";
+    void anExceptionInATurnEndsTheGameCleanlyInsteadOfCrashing() throws Exception {
+        int league = 4, faultTurn = 7;
+        long seed = 5L;
+        int[] before = scoresAfterTurns(league, seed, 2, faultTurn - 1);
+        Referee.failAt = "turn " + faultTurn;
         try {
-            GameResult r = run(4, 5L, Agents.Plus.class, Agents.Greedy.class);
-            assertTrue(String.join("", r.summaries).contains("Game over: referee error at turn 7"), r.summaries.toString());
-            assertTrue(r.scores.get(0) > 0 || r.scores.get(1) > 0, "scores kept " + r.scores);
+            GameResult r = runWithBotSeed(league, seed, Agents.Random.class, Agents.Random.class);
+            assertTrue(String.join("", r.summaries).contains("Game over: referee error at turn " + faultTurn), r.summaries.toString());
+            for (int i = 0; i < 2; i++) assertEquals(before[i], r.scores.get(i).intValue(), "player " + i + " after the fault");
         } finally {
             Referee.failAt = null;
         }
@@ -174,7 +209,7 @@ public class RefereeTest {
 
     @Test
     void viewerRegistersBeamYardLockAndCoordinateToggles() {
-        GameResult r = run(4, 5L, Agents.Plus.class, Agents.Greedy.class, Agents.Self.class, Agents.Random.class);
+        GameResult r = run(4, 5L, Agents.Random.class, Agents.Random.class, Agents.Random.class, Agents.Random.class);
         String all = String.join("", r.views);
         for (String t : new String[] {"yards", "coords"})
             assertTrue(all.contains("\"" + t + "\""), "toggle " + t);
@@ -212,11 +247,18 @@ public class RefereeTest {
         assertEquals(0, r.scores.get(0).intValue());
     }
 
+    /** Random against WAIT on Wood 2 ends early by design (no player acts for staleTurns) for every seed scanned; with the early end off, the game runs to maxTurns. */
     @Test
-    void woodTwoTwoPlayersRunsToOneHundredTurns() {
-        GameResult r = run(1, 3L, Agents.Greedy.class, Agents.Wait.class);
+    void woodTwoTwoPlayersRunsToItsLastTurn() {
+        GameResult r = run(1, 3L, Agents.Random.class, Agents.Wait.class);
+        String summary = String.join("", r.summaries);
+        assertFalse(summary.contains("referee error"), summary);
+        assertFalse(summary.contains("eliminated"), summary);
+        assertTrue(summary.contains("Game over: no player acted for " + Config.woodTwo().staleTurns + " turns"), summary);
         assertEquals(0, r.scores.get(1).intValue());
-        assertTrue(r.scores.get(0) > 0);
+        Config noEarlyEnd = Config.woodTwo();
+        noEarlyEnd.earlyEnd = false;
+        assertEquals(noEarlyEnd.maxTurns, BatchRunner.run(new String[] {"random", "wait"}, 1, 3L, noEarlyEnd).avgTurns(), 1e-9);
     }
 
     @Test

@@ -9,8 +9,8 @@ import com.codingame.game.engine.Config;
 class BatchRunnerTest {
     @Test
     void reportsWinSharesThatSumToGamesAndIsDeterministic() {
-        BatchRunner.Result a = BatchRunner.run(new String[] {"greedy", "wait", "random", "self"}, 8, 0L, Config.bronze());
-        BatchRunner.Result b = BatchRunner.run(new String[] {"greedy", "wait", "random", "self"}, 8, 0L, Config.bronze());
+        BatchRunner.Result a = BatchRunner.run(new String[] {"random", "wait", "random", "wait"}, 8, 0L, Config.bronze());
+        BatchRunner.Result b = BatchRunner.run(new String[] {"random", "wait", "random", "wait"}, 8, 0L, Config.bronze());
         double sum = 0;
         for (double w : a.wins) sum += w;
         assertEquals(8.0, sum, 1e-9);
@@ -34,7 +34,7 @@ class BatchRunnerTest {
 class BatchRunnerRecordsTest {
     @org.junit.jupiter.api.Test
     void perGameRecordsHoldSeatsRanksAndNonWaitShare() {
-        BatchRunner.Result r = BatchRunner.run(new String[] {"greedy", "wait", "self"}, 3, 5L, com.codingame.game.engine.Config.woodOne());
+        BatchRunner.Result r = BatchRunner.run(new String[] {"random", "wait", "random"}, 3, 5L, com.codingame.game.engine.Config.woodOne());
         org.junit.jupiter.api.Assertions.assertEquals(3, r.records.size());
         double seatSum = 0;
         for (double w : r.seatWins) seatSum += w;
@@ -48,7 +48,7 @@ class BatchRunnerRecordsTest {
         }
         BatchRunner.GameRecord g0 = r.records.get(0);
         org.junit.jupiter.api.Assertions.assertEquals(5L, g0.seed);
-        org.junit.jupiter.api.Assertions.assertEquals("greedy", g0.bot[0]);
+        org.junit.jupiter.api.Assertions.assertEquals("random", g0.bot[0]);
         org.junit.jupiter.api.Assertions.assertEquals("wait", r.records.get(1).bot[0], "seats rotate");
     }
 
@@ -60,13 +60,13 @@ class BatchRunnerRecordsTest {
 
     @org.junit.jupiter.api.Test
     void csvHasAHeaderAndOneRowPerPlayerPerGame() throws Exception {
-        BatchRunner.Result r = BatchRunner.run(new String[] {"self", "wait"}, 2, 0L, com.codingame.game.engine.Config.woodTwo());
+        BatchRunner.Result r = BatchRunner.run(new String[] {"random", "wait"}, 2, 0L, com.codingame.game.engine.Config.woodTwo());
         java.io.StringWriter w = new java.io.StringWriter();
         BatchRunner.writeCsv(r, w);
         String[] lines = w.toString().split("\n");
         org.junit.jupiter.api.Assertions.assertEquals("seed,players,id,seat,bot,score,rank,nonWaitShare,maxBotMs,overTime,crashed", lines[0]);
         org.junit.jupiter.api.Assertions.assertEquals(1 + 2 * 2, lines.length);
-        org.junit.jupiter.api.Assertions.assertTrue(lines[1].startsWith("0,2,0,0,self,"));
+        org.junit.jupiter.api.Assertions.assertTrue(lines[1].startsWith("0,2,0,0,random,"));
         java.io.StringWriter j = new java.io.StringWriter();
         BatchRunner.writeJson(r, j);
         org.junit.jupiter.api.Assertions.assertTrue(j.toString().startsWith("{\"games\":2,"));

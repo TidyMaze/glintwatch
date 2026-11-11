@@ -1,6 +1,6 @@
 import sys
 
-# Glintwatch boss, league level 1 (DESIGN F9): reads the whole input of each turn, then waits.
+# Glintwatch league level 1 boss placeholder (DESIGN F9): reads the whole input of each turn, then waits.
 def read():
     line = sys.stdin.readline()
     if not line:

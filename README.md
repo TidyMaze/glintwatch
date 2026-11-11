@@ -34,7 +34,7 @@ mvn -q dependency:build-classpath -Dmdep.outputFile=cp.txt
 timeout 600 java -cp "target/classes:target/test-classes:$(cat cp.txt)" Main <seed> <league 1-4> <bot> <bot> [<bot> <bot>]
 ```
 
-Bots available locally: `wait`, `random`, `self`, `greedy`, `plus` (2 to 4 per game). Example: `Main 1 4 greedy random plus wait`.
+Bots available locally: `wait`, `random` (2 to 4 per game). Example: `Main 1 4 random wait random`.
 
 The `referee/config/levelN/Boss.py` files are placeholders (they print `WAIT`); the real league bosses are provided on CodinGame.
 

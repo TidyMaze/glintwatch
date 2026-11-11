@@ -34,7 +34,7 @@ for i, (st, v) in enumerate([('unlit', 1), ('lit0', 2), ('lit1', 3), ('contested
 for s, (px, py) in enumerate([(40, 40), (1500, 40), (1500, 730), (40, 730)]):
     o.append(f'<rect x="{px+28}" y="{py+24}" width="112" height="112" fill="#6B7185"/>')  # live avatar, under the panel image
     o.append(G.img(f'panel_{s}', px, py, 380, 310, ax=0, ay=0))
-    o.append(t36(px + 156, py + 24, ['wait', 'greedy', 'random', 'plus'][s]) + t36(px + 172, py + 70, str([498, 263, 0, 213][s]), P[s], size=72))
+    o.append(t36(px + 156, py + 24, ['wait', 'p1', 'random', 'p2'][s]) + t36(px + 172, py + 70, str([498, 263, 0, 213][s]), P[s], size=72))
     o.append(t36(px + 66, py + 158, '3/6') + t36(px + 178, py + 158, '2') + t36(px + 282, py + 158, '1'))
     o.append(G.img('icon_place', px + 46, py + 252, 32, 32) + t36(px + 70, py + 234, '9 14') + t36(px + 352, py + 234, '+6', '#F4F6FF', 'end'))
     o.append(t36(px + 28, py + 268, 'hello', '#A0A6B8', weight='normal'))

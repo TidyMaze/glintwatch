@@ -27,7 +27,7 @@ Source: DESIGN.md "Statement v3" vs F1-F12. Ranked by return. Statement is about
 ## Length and league split
 18. Bronze adds 7 rules at once (supply, build delay, hidden type, wear, tides, values 1-3, strike). CG leagues normally add 1-2 per step. Risk: Bronze players hit a wall of text and a game that plays differently from Wood 1. Suggest (owner/designer choice, not a rule change by me): split into Bronze (supply, delay, wear) and Silver (tides, values, strike). Not decided here.
 19. The Wood 2 view should fit one screen: Goal, Reef, Beams, Mirrors, Actions (PLACE/WAIT only), Scoring (shared), I/O. With the tags hidden it does; checked by reading only [Wood 2] blocks: ok except item 2.
-20. Not checked: rendering of league blocks in the CG statement format, the viewer text, the Wood boss behaviour (F9) against the statement.
+20. Not checked: rendering of league blocks in the CG statement format, the viewer text.
 
 ## Designer answers (2026-11-11 11:51Z) - applied in DESIGN.md "Statement v4" and FINAL RULES
 1. Fixed: "Players cannot remove mirrors. [Wood only] Mirrors stay until the end. [Bronze+] Mirrors wear out."
@@ -51,11 +51,11 @@ Source: DESIGN.md "Statement v3" vs F1-F12. Ranked by return. Statement is about
     Reason: CG leagues teach 2-3 rules per step; the economy changes how you play (fewer mirrors, timing), tides and
     strike change what you aim at, so each league has one theme. The hardness gate runs on Silver (top) rules.
 19. Checked by reading only [Wood 2 only]/untagged blocks: fits one screen.
-20. Not done: CG rendering of league blocks (coder), viewer text (ux), boss vs statement check (M6 tests).
+20. Not done: CG rendering of league blocks (coder), viewer text (ux).
 
 ## Community manager verdict on Statement v4 (re-read, 2026-11-11 11:51)
 Read: Statement v4 plus F1, F3, F6 (grep), F9 against it. Verdict: OK to ship to the coder, 1 minor open.
-- Checked and consistent: F1 table has a Silver+ column; F3/F4/F6 say Silver+ for tides, values, strike; F9 has a Silver boss; tag scheme used throughout; items 1-17 and 19 confirmed fixed in the text.
+- Checked and consistent: F1 table has a Silver+ column; F3/F4/F6 say Silver+ for tides, values, strike; tag scheme used throughout; items 1-17 and 19 confirmed fixed in the text.
 - Open (minor, wording only): Locks paragraph still reads "then drops by 1 at the end of each turn"; F6 skips the drop on the turn of activation or turn. Say "each following turn".
-- Not done by me: CG rendering of league tags, viewer text, boss behaviour vs statement, real-seed check of the example reef.
-- 11:51Z designer, re-read: point 1 fixed (lock 'drops by 1 at the end of each following turn'); point 2 checked: F1, F3, F4, F5, F6 and F9 already say Silver+ for tides, values and strike, and F9 has the Silver boss G+.
+- Not done by me: CG rendering of league tags, viewer text, real-seed check of the example reef.
+- 11:51Z designer, re-read: point 1 fixed (lock 'drops by 1 at the end of each following turn'); point 2 checked: F1, F3, F4, F5, F6 and F9 already say Silver+ for tides, values and strike.
