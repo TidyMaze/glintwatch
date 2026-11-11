@@ -9,6 +9,7 @@ import com.codingame.game.Player;
 import com.codingame.game.engine.*;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.gameengine.module.entities.*;
+import com.codingame.gameengine.module.toggle.ToggleModule;
 import com.codingame.gameengine.module.tooltip.TooltipModule;
 
 /** Viewer with the art v1 sprites (art/png), laid out per ux/UX.md sections 1, 2, 8 and 12. */
@@ -20,6 +21,7 @@ public final class Viewer {
 
     private final GraphicEntityModule g;
     private final TooltipModule tips;
+    private final ToggleModule toggles;
     private final MultiplayerGameManager<Player> gm;
     private final Game game;
     private final Layout l;
@@ -36,9 +38,10 @@ public final class Viewer {
     private Text turnText, nextMirrorText, contestedText, awakeText;
     private Rectangle progress;
 
-    public Viewer(GraphicEntityModule g, TooltipModule tips, MultiplayerGameManager<Player> gm, Game game) {
+    public Viewer(GraphicEntityModule g, TooltipModule tips, ToggleModule toggles, MultiplayerGameManager<Player> gm, Game game) {
         this.g = g;
         this.tips = tips;
+        this.toggles = toggles;
         this.gm = gm;
         this.game = game;
         this.n = game.board.n;
@@ -143,30 +146,50 @@ public final class Viewer {
         refreshTurnBox();
     }
 
-    /** Legend box (UX 1): one icon row per state, then the beam pattern of each player. */
+    /** Legend box (UX 1): board-sized icons (24-28 px), one row per state, the yard rule, then the beam key. */
     private void legend() {
         g.createRectangle().setX(1500).setY(380).setWidth(380).setHeight(320).setFillColor(Layout.PANEL).setLineColor(Layout.FRAME)
             .setLineWidth(3).setZIndex(90);
-        String[][] rows = {{"crystal.png", "crystal: lit by one = pays"}, {"badge_zero.png", "lit by 2+: pays nobody"},
-            {"crystal_outline.png", "dormant: pays nothing"}, {"mirror_pending.png", "pending mirror (2 turns)"},
-            {"lock_arc.png", "lock: turns before TURN"}, {"streak_badge.png", "x2-x4: streak multiplier"}};
-        for (int k = 0; k < rows.length; k++) {
-            int y = 404 + 36 * k;
-            spriteAt(rows[k][0], 1536, y + 14, 30, 30).setTint(k == 0 ? Layout.CRYSTAL_GREY : Layout.WHITE).setZIndex(91);
-            text(rows[k][1], 22, Layout.TEXT).setX(1562).setY(y).setZIndex(91);
+        int ix = 1534, tx = 1562;
+        String[] texts = {"lit by one: pays", "lit by 2+: pays nobody", "dormant: pays nothing", "pending: reflects in 2 turns",
+            "lock: turns before TURN", "streak multiplier", "yard: owner only"};
+        for (int k = 0; k < texts.length; k++) {
+            int y = 392 + 34 * k, cy = y + 13;
+            switch (k) {
+                case 0: spriteAt("crystal.png", ix, cy, 30, 30).setTint(Layout.COLOUR[0]).setZIndex(91); break;
+                case 1:
+                    spriteAt("crystal.png", ix, cy, 30, 30).setTint(Layout.WHITE).setZIndex(91);
+                    spriteAt("badge_zero.png", ix + 10, cy - 10, 14, 14).setZIndex(92);
+                    break;
+                case 2: spriteAt("crystal_outline.png", ix, cy, 30, 30).setZIndex(91); break;
+                case 3: spriteAt("mirror_pending.png", ix, cy, 28, 28).setTint(Layout.COLOUR[1]).setZIndex(91); break;
+                case 4:
+                    spriteAt("mirror_base.png", ix, cy, 28, 28).setZIndex(91);
+                    for (int a = 0; a < 5; a++)
+                        sprite("lock_arc.png", 28, 28).setX(ix).setY(cy).setRotation(Math.toRadians(72 * a))
+                            .setTint(a < 3 ? Layout.COLOUR[2] : Layout.LOCK_OFF).setZIndex(92);
+                    break;
+                case 5:
+                    spriteAt("streak_badge.png", ix, cy, 32, 25).setTint(Layout.COLOUR[3]).setZIndex(91);
+                    text("x3", 16, Layout.WHITE).setX(ix).setY(cy).setAnchor(0.5).setFontWeight(Text.FontWeight.BOLD).setZIndex(92);
+                    break;
+                default: spriteAt("zone_tile.png", ix, cy, 24, 24).setTint(Layout.COLOUR[0]).setAlpha(0.4).setZIndex(91);
+            }
+            text(texts[k], 22, Layout.TEXT).setX(tx).setY(y).setZIndex(91);
         }
-        for (int id = 0; id < game.playerCount; id++) {
-            int y = 630 + 16 * id;
-            g.createTilingSprite().setImage(Layout.BEAM_PATTERN[id]).setTint(Layout.COLOUR[id]).setX(1524).setY(y).setBaseWidth(120)
-                .setBaseHeight(8).setTileScale(0.5).setZIndex(91);
-        }
-        text("beams: colour + pattern", 22, Layout.LABEL).setX(1660).setY(640).setZIndex(91);
+        text("empty seat: open to all", 18, Layout.LABEL).setX(tx).setY(392 + 34 * 6 + 26).setZIndex(91);
+        for (int id = 0; id < game.playerCount; id++)
+            g.createTilingSprite().setImage(Layout.BEAM_PATTERN[id]).setTint(Layout.COLOUR[id]).setX(1522).setY(652 + 10 * id)
+                .setBaseWidth(80).setBaseHeight(8).setTileScale(0.5).setZIndex(91);
+        text("beams: colour + pattern", 20, Layout.LABEL).setX(1612).setY(656).setZIndex(91);
     }
 
     private void coordinateLabels() {
         for (int k = 0; k < n; k++) {
-            text(String.valueOf(k), 20, Layout.LABEL).setX(l.cellX(k) + l.cell / 2).setY(l.y0 - 4).setAnchorX(0.5).setAnchorY(1).setZIndex(100);
-            text(String.valueOf(k), 20, Layout.LABEL).setX(l.x0 - 8).setY(l.cellY(k) + l.cell / 2).setAnchorX(1).setAnchorY(0.5).setZIndex(100);
+            toggles.displayOnToggleState(text(String.valueOf(k), 20, Layout.LABEL).setX(l.cellX(k) + l.cell / 2).setY(l.y0 - 4)
+                .setAnchorX(0.5).setAnchorY(1).setZIndex(100), "coords", true);
+            toggles.displayOnToggleState(text(String.valueOf(k), 20, Layout.LABEL).setX(l.x0 - 8).setY(l.cellY(k) + l.cell / 2)
+                .setAnchorX(1).setAnchorY(0.5).setZIndex(100), "coords", true);
         }
     }
 
@@ -179,6 +202,7 @@ public final class Viewer {
             .setBaseWidth((x1 - x0 + 1) * l.cell).setBaseHeight((y1 - y0 + 1) * l.cell).setTint(Layout.COLOUR[id]).setAlpha(0.16)
             .setZIndex(20);
         tip(yard, "yard of " + name(id));
+        toggles.displayOnToggleState(yard, "yards", true);
     }
 
     private void lamp(int id) {
@@ -255,6 +279,8 @@ public final class Viewer {
                 Line glow = g.createLine().setLineColor(Layout.COLOUR[id]).setAlpha(0.22).setLineWidth(2 * w + 6).setZIndex(40);
                 TilingSprite core = g.createTilingSprite().setImage(Layout.BEAM_PATTERN[id]).setTint(Layout.COLOUR[id])
                     .setBaseHeight(w).setTileScale(w / 16.0).setAnchorY(0.5).setZIndex(41);
+                toggles.displayOnToggleState(glow, "beam" + id, true);
+                toggles.displayOnToggleState(core, "beam" + id, true);
                 pool.add(new Entity<?>[] {glow, core});
             }
             for (int k = 0; k < pool.size(); k++) {
@@ -296,7 +322,7 @@ public final class Viewer {
         final Text digit;
         final String tip;
         /** Created on first use: most crystals never need them, and frame 0 is limited. */
-        Sprite outline, glow, zero, streakChip, dashedChip, timerChip, ownerBadge;
+        Sprite outline, glow, zero, streakChip, dashedChip, timerChip, ownerBadge, contestRing;
         Text streakText, timerText;
         String lastState = "";
 
@@ -331,8 +357,16 @@ public final class Viewer {
         /** UX 2: owner emblem top-right of a crystal lit by one player, so colour is not the only cue. */
         Sprite ownerBadge() {
             if (ownerBadge == null)
-                ownerBadge = spriteAt(Layout.EMBLEM[0], cx + 0.32 * l.cell, cy - 0.32 * l.cell, 24, 24).setZIndex(53);
+                // the 48 px emblem art has padding: 34 px gives a ~24 px visible shape (UX r 12)
+                ownerBadge = spriteAt(Layout.EMBLEM[0], cx + 0.30 * l.cell, cy - 0.30 * l.cell, 34, 34).setZIndex(53);
             return ownerBadge;
+        }
+
+        /** UX 2: dashed white ring around a contested crystal (the tintable dashed ring of mirror_pending). */
+        Sprite contestRing() {
+            if (contestRing == null)
+                contestRing = spriteAt("mirror_pending.png", cx, cy, 0.9 * l.cell, 0.9 * l.cell).setTint(Layout.WHITE).setZIndex(50);
+            return contestRing;
         }
 
         Sprite zero() {
@@ -389,11 +423,13 @@ public final class Viewer {
             if (!awake) visible(outline(), true);
             else if (outline != null) visible(outline, false);
             fill(digit, awake ? Layout.INK : Layout.DORMANT);
-            boolean glowing = by >= 0 && awake;
-            if (glowing) {
+            boolean glowing = by >= 0 && awake, white = contested && awake;
+            if (glowing || white) {
                 alpha(glow(), 0.6);
                 tint(glow, fill);
             } else if (glow != null) alpha(glow, 0.0);
+            if (white) visible(contestRing(), true);
+            else if (contestRing != null) visible(contestRing, false);
             if (glowing) {
                 Sprite badge = ownerBadge();
                 visible(badge, true);
@@ -466,6 +502,7 @@ public final class Viewer {
                 arcs = new Sprite[5];
                 for (int k = 0; k < 5; k++) {
                     arcs[k] = sprite("lock_arc.png", l.cell, l.cell).setRotation(Math.toRadians(72 * k));
+                    toggles.displayOnToggleState(arcs[k], "locks", true);
                     group.add(arcs[k]);
                 }
             }

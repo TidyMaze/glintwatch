@@ -7,9 +7,13 @@ from gen_mood import trace
 P = ['#56B4E9', '#E69F00', '#009E73', '#CC79A7']; EMB = ['ring', 'triangle', 'square', 'star']; INK = '#0E1018'
 PAT = ['beam_solid', 'beam_dash', 'beam_dots', 'beam_double']
 _b64 = {}
+VECTOR = False  # True: embed the SVG sources (sharp when scaled up, used by the 1920 cover)
 def uri(n):
-    if n not in _b64: _b64[n] = 'data:image/png;base64,' + base64.b64encode(open(os.path.join(PNG, n + '.png'), 'rb').read()).decode()
-    return _b64[n]
+    key = (n, VECTOR)
+    if key not in _b64:
+        if VECTOR: _b64[key] = 'data:image/svg+xml;base64,' + base64.b64encode(open(os.path.join(HERE, 'sprites', n + '.svg'), 'rb').read()).decode()
+        else: _b64[key] = 'data:image/png;base64,' + base64.b64encode(open(os.path.join(PNG, n + '.png'), 'rb').read()).decode()
+    return _b64[key]
 _filters = {}
 def tint(c):
     if c is None: return ''
@@ -36,6 +40,10 @@ def text(x, y, s, size, fill='#E8EAF0', anchor='start', weight='bold', style='')
 def wrap(W, H, body):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">'
             f'<defs>{"".join(_filters.values())}</defs>{body}</svg>')
+def render_to(pp, W, H, body):
+    sp = pp + '.svg'; open(sp, 'w').write(wrap(W, H, body))
+    subprocess.run(['sips', '-s', 'format', 'png', sp, '--out', pp], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    os.remove(sp); print(pp)
 def render(name, W, H, body):
     sp = os.path.join(HERE, name + '.svg'); pp = os.path.join(ART, name + '.png')
     open(sp, 'w').write(wrap(W, H, body))
@@ -202,9 +210,10 @@ def contact():
     o.append(img('floor_1', 1500, 960, 96, 96, ax=0, ay=0) + img('rock', 1548, 1008, 96, 96) + text(1500, 1074, 'rock on floor_1', 14, '#A0A6B8', weight='normal'))
     render('contact-sheet', 1920, 1080, ''.join(o))
 
-def cover(W=1200, H=675):
+def cover(W=1200, H=675, name='cover'):
+    Wout, Hout = W, H; W, H = 1200, 675  # composed at 1200x675, scaled as a whole
     c = 96; ox, oy = -24, -70; Cc = lambda x, y: (ox + x * c + c / 2, oy + y * c + c / 2)
-    o = [img('background', 0, 0, W, H, ax=0, ay=0)]
+    o = [img('background', 0, 0, 1200, 675, ax=0, ay=0)]
     for y in range(0, 8):
         for x in range(0, 14):
             o.append(img(f'floor_{(x + y) % 2}', ox + x * c, oy + y * c, c, c, ax=0, ay=0))
@@ -220,6 +229,8 @@ def cover(W=1200, H=675):
             L = math.hypot(X2 - X1, Y2 - Y1); ang = math.degrees(math.atan2(Y2 - Y1, X2 - X1))
             o.append(f'<line x1="{X1:.1f}" y1="{Y1:.1f}" x2="{X2:.1f}" y2="{Y2:.1f}" stroke="{P[s]}" stroke-opacity=".28" stroke-width="{2*w+10}" stroke-linecap="round"/>')
             pid = f'cv{s}_{int(X1)}_{int(Y1)}'
+            if s == 0:  # solid: plain fill (a tiled pattern shows seams once the cover is scaled to 1920)
+                o.append(f'<rect x="0" y="{-w/2}" width="{L:.1f}" height="{w}" fill="{P[0]}" transform="translate({X1:.1f},{Y1:.1f}) rotate({ang:.1f})"/>'); continue
             o.append(f'<pattern id="{pid}" patternUnits="userSpaceOnUse" x="0" y="{-w/2}" width="{2*w}" height="{w}"><image width="{2*w}" height="{w}" href="{uri(PAT[s])}" preserveAspectRatio="none"/></pattern>'
                      f'<rect x="0" y="{-w/2}" width="{L:.1f}" height="{w}" fill="url(#{pid})" transform="translate({X1:.1f},{Y1:.1f}) rotate({ang:.1f})"{tint(P[s])}/>')
     gems = [(7, 4, 3, 'X'), (7, 1, 2, 1), (12, 4, 1, 3), (3, 2, 1, 0), (5, 3, 2, 0), (12, 2, 2, 2), (9, 3, 1, None), (2, 1, 2, None), (3, 4, 1, 3)]
@@ -237,7 +248,10 @@ def cover(W=1200, H=675):
     o.append(img('logo', 330, H - 92, 600, 200))
     o.append(text(330, H - 22, 'Bend the light. Hold the crystals. Four lamps, one reef.', 24, '#AFC0DA', 'middle', 'normal'))
     for i in range(4): o.append(img('emblem_' + EMB[i], 780 + i * 100, H - 88, 56, 56, P[i]))
-    render('cover', W, H, ''.join(o))
+    body = ''.join(o)
+    if Wout != 1200: body = f'<g transform="scale({Wout/1200})">{body}</g>'
+    render(name, Wout, Hout, body)
 
 if __name__ == '__main__':
     contact(); integration(); cover()
+    VECTOR = True; cover(1920, 1080, 'cover-1920')

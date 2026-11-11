@@ -76,6 +76,7 @@ public final class Config {
         Config c = woodOne();
         c.maxTurns = 100;
         c.turnAllowed = false;
+        c.lock = 0; // F6.3: no TURN in Wood 2, so the lock always reads 0 (qa BUG-4)
         c.walls = false;
         c.contested = false;
         c.streakCap = 1;

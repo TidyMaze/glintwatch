@@ -18,7 +18,10 @@ public class Main {
         MultiplayerGameRunner gameRunner = new MultiplayerGameRunner();
         gameRunner.setSeed(seed);
         gameRunner.setLeagueLevel(league);
-        for (String b : bots) gameRunner.addAgent(agent(b), b);
+        // -Dgw.houses=true: neutral nicknames (the four houses), e.g. to record the intro replay
+        String[] houses = {"Sky Ring", "Amber Spire", "Jade Keep", "Orchid Star"};
+        boolean neutral = Boolean.getBoolean("gw.houses");
+        for (int i = 0; i < bots.size(); i++) gameRunner.addAgent(agent(bots.get(i)), neutral ? houses[i] : bots.get(i));
         gameRunner.start(Integer.getInteger("gw.port", 8888));
     }
 

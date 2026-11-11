@@ -9,6 +9,7 @@ import com.codingame.gameengine.core.AbstractReferee;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.gameengine.module.endscreen.EndScreenModule;
 import com.codingame.gameengine.module.entities.GraphicEntityModule;
+import com.codingame.gameengine.module.toggle.ToggleModule;
 import com.codingame.gameengine.module.tooltip.TooltipModule;
 import com.google.inject.Inject;
 
@@ -18,24 +19,57 @@ public class Referee extends AbstractReferee {
     @Inject private GraphicEntityModule graphicEntityModule;
     @Inject private TooltipModule tooltips;
     @Inject private EndScreenModule endScreenModule;
+    @Inject private ToggleModule toggleModule;
 
     private Game game;
     private Viewer viewer;
 
+    /** Local diagnostics on stderr, only with -Dglintwatch.diag=true (CG never shows referee stderr). */
+    private static void log(String message) {
+        if (Boolean.getBoolean("glintwatch.diag")) System.err.println("[glintwatch] " + message);
+    }
+
+    /** Runs an action; on failure logs the stack ("<where> failed: ...") on stderr, then rethrows. */
+    static void guarded(String where, Runnable action) {
+        try {
+            action.run();
+        } catch (RuntimeException | Error e) {
+            java.io.StringWriter w = new java.io.StringWriter();
+            e.printStackTrace(new java.io.PrintWriter(w));
+            for (String line : w.toString().split("\n")) log(where + " failed: " + line);
+            throw e;
+        }
+    }
+
     @Override
     public void init() {
+        guarded("init", this::initGame);
+    }
+
+    private void initGame() {
+        long t0 = System.nanoTime();
+        log("init start league " + gameManager.getLeagueLevel() + " seed " + gameManager.getSeed() + " players "
+            + gameManager.getPlayerCount() + " java " + System.getProperty("java.version"));
         Config cfg = Config.forLeague(gameManager.getLeagueLevel());
         game = Game.fromSeed(gameManager.getSeed(), gameManager.getPlayerCount(), cfg);
+        log("map n " + game.board.n + " in " + (System.nanoTime() - t0) / 1_000_000 + " ms");
         gameManager.setMaxTurns(cfg.maxTurns);
         gameManager.setFirstTurnMaxTime(1000);
         gameManager.setTurnMaxTime(50);
         gameManager.setFrameDuration(600);
-        viewer = new Viewer(graphicEntityModule, tooltips, gameManager, game);
+        viewer = new Viewer(graphicEntityModule, tooltips, toggleModule, gameManager, game);
         viewer.init();
+        log("init done in " + (System.nanoTime() - t0) / 1_000_000 + " ms");
     }
 
     @Override
     public void gameTurn(int turn) {
+        long t0 = System.nanoTime();
+        guarded("turn " + turn, () -> playTurn(turn));
+        if (turn <= 2 || turn % 50 == 0) log("turn " + turn + " done in " + (System.nanoTime() - t0) / 1_000_000 + " ms");
+    }
+
+    private void playTurn(int turn) {
         game.beginTurn();
         for (Player p : gameManager.getActivePlayers()) {
             if (turn == 1)

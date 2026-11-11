@@ -110,7 +110,7 @@ Hover is mouse only; on touch, CG tooltip behaviour is not verified (not done).
 |---|---|---|
 | `beam0` .. `beam3` "Beams of <player>" | ON | that player's beam segments + glow (lets a viewer follow one player) |
 | `yards` "Yards" | ON | zone tints and borders |
-| `coords` "Coordinates" | OFF | axis labels in the margins |
+| `coords` "Coordinates" | ON (changed 2026-11-11: no floor tooltips, so the margins are the only coordinate source; bot authors need them) | axis labels in the margins |
 | `locks` "Lock rings" | ON | lock arcs |
 
 ## 6. Accessibility (computed: WCAG 2 contrast; colour blindness = Machado 2009 severity 1.0, CIE76 dE)
@@ -218,7 +218,7 @@ Lock at N = 19: arcs of ~20 px at 1920; "locked or not" reads, the count does no
 Tooltip additions: mirror `pending 1 (reflects next turn)`, `life 7`, `lock 3`; crystal `awake, sleeps in 4` /
 `dormant, wakes in 6`, `streaks: Sky 4, Amber 2 (frozen)`.
 Crystal phase countdown: shares the crystal's **badge strip** (bottom row of the cell) with the streak badge: timer chip bottom-left, streak chip bottom-right, both the same size (`fs = max(17, round(0.32*cell))`, chip `1.45*fs x 1.15*fs`; 2 chips = 61 px of 66 at N15, 50 of 52 at N19). Timer: `↑2` (wakes in 2) or `↓3` (sleeps in 3), white on ink, border `#8E9BB3`, drawn only when the change is <= 3 turns away. Same sprite `streak_badge.png`, tinted grey-blue. At 960 px: ~10 px text, reads (was 8 px in a separate 16 px pill).
-Toggle addition: `timers` "All crystal timers" (OFF): the pill on every crystal, any countdown.
+Toggle `timers` "All crystal timers": dropped (adds data on every crystal every frame; the <= 3-turn chip and the tooltip phase cover it).
 Streak decay (D5): a crystal not lit by P while P's streak on it is >= 2 shows P's badge at 60 % opacity with a dashed border (one player shown: the highest decaying streak; all in the tooltip).
 Animation addition: shatter at t 0.60-1.00; supply `+1` on the hand count at t 0.00 of turns multiple of 4.
 Cover: 1200x675 (art/cover.png). Unverified: neither a web search nor the CG contribution skill (games.md, SKILL.md; only "at most 300 assets") gives a size; the owner checks it on the upload page.

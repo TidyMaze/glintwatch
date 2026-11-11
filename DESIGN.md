@@ -64,9 +64,9 @@ Facts (computed): `A` = 12-17 (N=13), 22-27 (15), 34-39 (17), 48-53 (19); seeds 
 | Crystal | passes and lights it for the shooter |
 | Active mirror `/` (0) | E->N, N->E, W->S, S->W |
 | Active mirror `\` (1) | E->S, S->E, W->N, N->W |
-| Lamp of an active player | stops; if not the shooter's own lamp: strike (Silver+); own lamp: nothing |
+| Lamp of an active player | stops; strike if it is another player's (Silver+). A beam cannot reach its own lamp (reversible optics: retracing needs a 180-degree turn) |
 | Lamp of a deactivated player | wall |
-| Lamp cell of an empty seat | Empty (it is '.' in the map) |
+| Lamp cell of an empty seat | Empty (it is '.' in the map); PLACE allowed (QA Q5) |
 Beams never block beams. Mirrors belong to nobody.
 
 ## F5 Protocol
@@ -99,11 +99,11 @@ Constraints: 2 <= playerCount <= 4; 13 <= N <= 19, odd; 0 <= mirrorsInHand <= 12
    max 6 (so the input of turn 4 already shows it).
 1. Read: timeout or a line that is not one of the 3 commands with integer arguments -> deactivate (F8).
 2. Validate on the start-of-turn state; invalid -> WAIT with a summary line:
-   PLACE: in board, type 0/1, cell Empty (not wall, crystal, any lamp cell, mirror active or pending), not in
+   PLACE: in board, type 0/1, cell Empty (not wall, crystal, the lamp cell of a seat holding a player, mirror active or pending), not in
    another player's zone, `mirrorsInHand > 0`. TURN (Wood 1+): an active mirror there, lock 0, not in another
    player's zone. Wood 2: TURN invalid.
 3. Places: 2+ valid PLACE on one cell: all fail, no mirror spent. Else the mirror appears, hand -1.
-   Bronze+: `pending = 1`, `lock = 0`, `life = 20`, type hidden from rivals. Wood: active at once, `lock = LOCK` (Wood 1).
+   Bronze+: `pending = 1`, `lock = 0`, `life = 20`, type hidden from rivals. Wood: active at once, `lock = LOCK` in Wood 1, `lock = 0` in Wood 2 (no TURN there); Wood 2 streaks stay 0.
 4. Turns: each mirror targeted by >= 1 valid TURN flips once, `lock = LOCK`.
 5. Beams: each active player's lamp fires; trace: step forward; outside board: stop; wall/deactivated lamp: stop;
    active lamp: stop (strike if another player's); crystal: add to shooter's lit set; active mirror: reflect;
@@ -172,22 +172,24 @@ Untagged text = all leagues. Tag names are internal labels (config level1-4); pl
 league, because CG may show community leagues as Wood 3 / Wood 2 / Wood 1 / Bronze (open check M7: verify on the
 CG contribution preview).
 
-> This is a league-based game: new rules unlock as you climb.
+> ### League introduction
+> This is a **league based** challenge. For this challenge, multiple leagues for the same game are available. Once
+> you have proven your worth against the Boss, you will access the higher league.
 >
-> [Wood 2 only] Night falls on the Tidereef. Its crystals drink lamplight and keep it until dawn.
+> [Wood 2 only] **This league:** Night falls on the Tidereef. Its crystals drink lamplight and keep it until dawn.
 > You keep a lamp on the reef's edge and a bag of 12 mirrors. Bend your beam onto the crystals:
 > each turn, every crystal your light touches pays you.
 >
-> [Wood 1 only] The reef is not empty any more: black rocks drink light, and a crystal lit by two lamps clouds over.
-> A crystal held by your beam alone warms up and pays more each turn, up to x4.
+> [Wood 1 only] **This league:** The reef is not empty any more: black rocks drink light, and a crystal lit by two
+> lamps clouds over. A crystal held by your beam alone warms up and pays more each turn, up to x4.
 > Mirrors can now be turned, but a moved mirror needs 5 turns to settle.
 >
-> [Bronze only] The divers bring up only one mirror every 4 turns, and you can carry 6.
+> [Bronze only] **This league:** The divers bring up only one mirror every 4 turns, and you can carry 6.
 > A new mirror takes 2 turns to set, hidden from your rivals, and the salt breaks it after 20 turns.
 > Every mirror is a choice now.
 >
-> [Silver+] The tide has come in. Each crystal sleeps 15 turns out of every 45 and forgets who held it.
-> Crystals now hold 1 to 3 points of light, and a beam thrown into a rival's lamp pays 2 each turn.
+> [Silver+] **This league:** The tide has come in. Each crystal sleeps 15 turns out of every 45 and forgets who held
+> it. Crystals now hold 1 to 3 points of light, and a beam thrown into a rival's lamp pays 2 each turn.
 >
 > ### Goal
 > Score more points than the other lamp keepers by lighting crystals with your lamp's beam.
@@ -219,6 +221,8 @@ CG contribution preview).
 > | type `0` = `/` | leaves north | leaves east | leaves south | leaves west |
 > | type `1` = `\` | leaves south | leaves west | leaves north | leaves east |
 >
+> ![How the two mirror types bend a beam](img/mirrors.png)
+>
 > Mirrors belong to nobody: a mirror bends **every** beam that reaches it, yours and your opponents'.
 > Players cannot remove mirrors. [Wood only] Mirrors stay until the end. [Bronze+] Mirrors wear out (see below).
 >
@@ -231,7 +235,7 @@ CG contribution preview).
 > You may add a message after your action, for example `PLACE 5 3 1 hello` (30 characters max).
 >
 > **Yards.** Each lamp's yard is the 5 x 3 block of cells around it (the lamp cell, and every cell up to 2 cells
-> away along the edge and up to 2 cells deep, diagonals included). Only the yard's owner may place or turn
+> away along the edge and up to 2 cells deep, diagonals included). Only the yard's owner may place[Wood 1+] or turn[/]
 > mirrors there. Beams cross yards freely.
 >
 > **Same cell.** If two or more players place a mirror on the same cell in the same turn, all of them fail and
@@ -245,7 +249,7 @@ CG contribution preview).
 > **Impossible actions** are replaced by `WAIT` (the reason is shown in the game summary): a cell outside the
 > reef, a type other than 0 or 1, a cell that is not empty (rock, crystal, lamp, mirror, [Bronze+] pending mirror),
 > a cell in another player's yard, no mirror in hand, [Wood 1+] turning where there is no active mirror or the
-> lock is not 0. A line that is not one of the three commands with whole numbers eliminates you.
+> lock is not 0. A line that is not a valid command (keyword and whole numbers) eliminates you.
 >
 > ### Scoring
 > [Wood 2 only] Each turn, every player whose beam lights a crystal gains its value. Several beams on one crystal
@@ -258,6 +262,10 @@ CG contribution preview).
 > - lit by **two or more** players: nobody gains; those players keep their streak; the others' drop by 1;
 > - lit by **nobody**: every streak drops by 1 (min 0).
 > A crystal you keep alone pays x1, x2, x3, then x4 every turn.
+>
+> [Wood 1+] ![A crystal lit by one beam scores; lit by two beams it scores nothing](img/contested.png)
+>
+> [Wood 1+] ![Streak badges x1 to x4 under a crystal](img/streak.png)
 >
 > ### [Bronze+] Mirror economy
 > - **Supply.** You start with 4 mirrors and get 1 more at the start of turns 4, 8, 12 ... (the input of that
@@ -273,16 +281,27 @@ CG contribution preview).
 >   otherwise asleep. `phase` is given at the start. An asleep crystal gives nothing and resets the streaks on it.
 > - **Values.** Crystals are worth 1, 2 or 3.
 > - **Strike.** Each turn, a beam that ends on another player's lamp gives 2 points to the player who fired it.
->   A beam that comes back to its own lamp stops and gives nothing.
 >
 > ### Order of a turn
-> 1. [Bronze+] Supply (before the input is sent). 2. All placements, then all turns. 3. Every lamp fires.
-> 4. Scoring. 5. Locks drop by 1; [Bronze+] pending mirrors become active, active mirrors wear.
+> - [Bronze+] Supply (before the input is sent).
+> - All placements[Wood 1+], then all turns[/].
+> - Every lamp fires.
+> - Scoring.
+> - [Wood 1+] Locks drop by 1.
+> - [Bronze+] Pending mirrors become active, active mirrors wear.
 >
 > ### End of the game
-> The game ends after [Wood 2 only] 100 [Wood 1+] 150 turns, or when fewer than two players remain. The highest
-> score wins; equal scores share the rank. A player who does not answer in time or prints an invalid line is
-> eliminated: score -1, its lamp becomes a rock, its yard stays protected.
+> The game ends after [Wood 2 only] 100 [Wood 1+] 150[/] turns, or when fewer than two players remain.
+> Equal scores share the rank. An eliminated player gets a score of -1; its lamp becomes a rock and its yard stays
+> protected.
+>
+> ### Victory conditions
+> - Have the highest score when the game ends.
+>
+> ### Defeat conditions
+> - Have a lower score than another player when the game ends.
+> - Your program does not answer in time, crashes, or prints a line that is not a valid command (keyword and whole
+>   numbers): you are eliminated.
 >
 > ### Example (an example reef, not a real map)
 > `N = 13`. Your lamp is at (0,3) and fires east; a crystal of value 1 is at (5,6). You print `PLACE 5 3 1`.
@@ -291,34 +310,62 @@ CG contribution preview).
 > [Bronze+] The mirror starts bending beams 2 turns after you place it.
 >
 > ### Game input
-> **Initialization**
-> - Line 1: `playerCount myId`
-> - Line 2: `N`
-> - Next `playerCount` lines: `playerId lampX lampY dir` (`dir` is `E`, `S`, `W` or `N`)
-> - Next `N` lines: one row of the reef, `N` characters, `y = 0` first
-> - Next line: `crystalCount`
-> - Next `crystalCount` lines: `x y value phase` ([below Silver] `phase` is -1: always awake)
+> **Initialization input**
+> - Line 1: two space-separated integers `playerCount` and `myId`: the number of players (`2` to `4`) and your
+>   player id (`0` to `playerCount` - 1).
+> - Line 2: an integer `N`: the width and height of the reef.
+> - Next `playerCount` lines: three space-separated integers and a character, `playerId` `lampX` `lampY` `dir`:
+>   a player's id, the cell of its lamp, and the direction its lamp fires (`E`, `S`, `W` or `N`).
+> - Next `N` lines: a string `row` of `N` characters, one row of the reef from `y = 0` down: `.` empty,
+>   [Wood 1+] `#` rock,[/] `1` `2` `3` crystal of that value, `A` `B` `C` `D` lamp of player `0` `1` `2` `3`.
+> - Next line: an integer `crystalCount`: the number of crystals.
+> - Next `crystalCount` lines: four space-separated integers `x` `y` `value` `phase`: a crystal's cell, its value
+>   and its tide phase[below Silver] (always `-1` in this league: always awake)[/].
 >
-> **Each turn**
-> - Line 1: `turn` (starts at 1)
-> - Next `playerCount` lines, by player id: `score mirrorsInHand active` (`active` 1, or 0 if eliminated)
-> - Next line: `mirrorCount`
-> - Next `mirrorCount` lines: `x y type lock pending life`
->   - `type`: 0 (`/`) or 1 (`\`); -1 for an opponent's pending mirror
->   - `lock`: 0 when it can be turned
->   - `pending`: 1 if not yet bending beams, else 0 [Wood only] (always 0 in this league)
->   - `life`: active turns left before it shatters [Wood only] (always -1 in this league: mirrors never wear)
-> - Next line: `crystalCount`
-> - Next `crystalCount` lines: `x y awake litBy s_0 ... s_(playerCount-1)`
->   - `awake`: 1 or 0 [below Silver] (always 1 in this league)
->   - `litBy`: the player who lit it alone on the last turn, -1 nobody (and on turn 1), -2 several players
->   - `s_i`: player i's streak on it, 0 to 4
+> **Input for one game turn**
+> - Line 1: an integer `turn`: the turn number, starting at `1`.
+> - Next `playerCount` lines, by player id: three space-separated integers `score` `mirrorsInHand` `active`: the
+>   player's score, the mirrors it can still place, and `1` if it is in the game (`0` if eliminated).
+> - Next line: an integer `mirrorCount`: the number of mirrors on the reef.
+> - Next `mirrorCount` lines: six space-separated integers `x` `y` `type` `lock` `pending` `life`. Every listed
+>   mirror, pending or active, fills its cell: you cannot place there.
+>   - `x` `y`: the mirror's cell.
+>   - `type`: `0` (`/`) or `1` (`\`)[Bronze+]; `-1` for an opponent's pending mirror.
+>   - `lock`: turns before it can be turned; `0` when it can be turned[Wood 2 only] (always `0` in this league)[/].
+>   - `pending`: `1` if not yet bending beams, else `0`[Wood only] (always `0` in this league)[/].
+>   - `life`: active turns left before it shatters[Wood only] (always `-1` in this league: mirrors never wear)[/].
+> - Next line: an integer `crystalCount`: the number of crystals.
+> - Next `crystalCount` lines: `4 + playerCount` space-separated integers `x` `y` `awake` `litBy` `s_0` ... `s_(playerCount-1)`:
+>   - `x` `y`: the crystal's cell.
+>   - `awake`: `1` or `0`[below Silver] (always `1` in this league)[/].
+>   - `litBy`: the player who lit it alone on the last turn; `-1` nobody (and on turn `1`); `-2` several players.
+>   - `s_i`: player i's streak on it, `0` to `4`[Wood 2 only] (always `0` in this league)[/].
 >
-> **Output**: one line: `PLACE x y type`, `TURN x y` or `WAIT`, optionally followed by a message.
+> **Output for one game turn**
+> - A single line with one action, optionally followed by a space and a message (`30` characters max):
+>   - `PLACE x y type`: place a mirror on cell (`x`, `y`); `type` is `0` (`/`) or `1` (`\`).
+>   - [Wood 1+] `TURN x y`: flip the mirror on cell (`x`, `y`).
+>   - `WAIT`: do nothing.
+> - Tokens are separated by spaces; any other separator (a tab, for example) makes the line invalid.
+> - Example: `PLACE 5 3 1 hello`
 >
-> **Constraints**: 2 <= `playerCount` <= 4; 13 <= `N` <= 19, odd; response time 1000 ms on turn 1, 50 ms after.
-> Rows and lists are sorted by `y`, then `x`.
-
+> **Constraints**
+> - 2 ≤ `playerCount` ≤ 4
+> - 13 ≤ `N` ≤ 19, `N` is odd
+> - Response time for the first turn ≤ 1000 ms
+> - Response time for one turn ≤ 50 ms
+>
+> ### Technical details
+> - Rows and lists are sorted by `y`, then `x`.
+> - You can read the referee source code on https://github.com/TidyMaze/glintwatch
+> - Glintwatch is an original game; its idea comes from the genre of laser-and-mirror reflection puzzles.
+>
+> ### League preview
+> [Wood 2 only] Rocks, turning mirrors with locks, and crystal streaks that pay more the longer you hold a crystal alone.
+>
+> [Wood 1 only] A mirror economy: a mirror supply, build time with hidden types, and wear.
+>
+> [Bronze only] Crystal tides, crystal values from 1 to 3, and strikes on rival lamps.
 
 # History (design record; superseded by FINAL RULES above)
 

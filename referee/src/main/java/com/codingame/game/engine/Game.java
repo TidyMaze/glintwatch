@@ -36,6 +36,15 @@ public final class Game {
         }
         for (int p = 0; p < board.n * board.n; p++)
             if (board.mirrorType[p] >= 0 && board.pending[p] == 0) board.mirrorLife[p] = cfg.mirrorLife;
+        // F6.2 / QA Q5: the lamp cell of a seat without a player is an ordinary Empty cell
+        boolean[] held = new boolean[4];
+        for (int s : seatOf) held[s] = true;
+        for (int s = 0; s < 4; s++)
+            if (!held[s]) {
+                int p = Seats.lampCell(s, board.n, board.e);
+                board.kind[p] = Board.EMPTY;
+                board.lampSeat[p] = -1;
+            }
     }
 
     public static Game fromSeed(long seed, int playerCount, Config cfg) {

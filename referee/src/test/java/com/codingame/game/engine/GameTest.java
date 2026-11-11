@@ -364,10 +364,22 @@ class GameTest {
     }
 
     @Test
-    void emptySeatZoneIsOpenAndItsLampCellIsNot() throws Exception {
-        Game g = new Game(example(), 2, immediate()); // seats 0 and 2; seat 1 lamp (9,0) empty
+    void emptySeatZoneAndLampCellAreOpen() throws Exception {
+        Game g = new Game(example(), 2, immediate()); // seats 0 and 2; seat 1 lamp (9,0) empty (QA Q5, F6.2)
         assertNull(g.playTurn(cmds(place(9, 1, 0), waitCmd())).invalid[0]);
-        assertNotNull(g.playTurn(cmds(place(9, 0, 0), waitCmd())).invalid[0]);
+        assertNull(g.playTurn(cmds(place(9, 0, 0), waitCmd())).invalid[0]);
+        assertNotNull(g.playTurn(cmds(place(12, 9, 0), waitCmd())).invalid[0], "lamp of a seat with a player");
+    }
+
+    @Test
+    void mirrorOnAnEmptySeatLampCellReflectsBeams() throws Exception {
+        Board b = Board.empty(13, 3);
+        Game g = new Game(b, 2, immediate());
+        g.playTurn(cmds(place(9, 3, 0), waitCmd())); // seat 0 row 3 east, '/' at (9,3) -> north up column 9 to (9,0)
+        g.playTurn(cmds(place(9, 0, 1), waitCmd())); // '\' at the empty lamp cell (9,0): N -> W
+        Beam beam = g.playTurn(cmds(waitCmd(), waitCmd())).beams[0];
+        assertEquals(Dir.W, beam.endDir);
+        assertEquals(-1, beam.endX);
     }
 
     @Test

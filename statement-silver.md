@@ -84,7 +84,6 @@ A crystal you keep alone pays x1, x2, x3, then x4 every turn.
   otherwise asleep. `phase` is given at the start. An asleep crystal gives nothing and resets the streaks on it.
 - **Values.** Crystals are worth 1, 2 or 3.
 - **Strike.** Each turn, a beam that ends on another player's lamp gives 2 points to the player who fired it.
-  A beam that comes back to its own lamp stops and gives nothing.
 
 ### Order of a turn
 1. Supply (before the input is sent). 2. All placements, then all turns. 3. Every lamp fires.
@@ -114,7 +113,7 @@ The mirror starts bending beams 2 turns after you place it.
 - Line 1: `turn` (starts at 1)
 - Next `playerCount` lines, by player id: `score mirrorsInHand active` (`active` 1, or 0 if eliminated)
 - Next line: `mirrorCount`
-- Next `mirrorCount` lines: `x y type lock pending life`
+- Next `mirrorCount` lines: `x y type lock pending life` (every listed mirror, pending or active, fills its cell: you cannot place there)
   - `type`: 0 (`/`) or 1 (`\`); -1 for an opponent's pending mirror
   - `lock`: 0 when it can be turned
   - `pending`: 1 if not yet bending beams, else 0
@@ -126,6 +125,7 @@ The mirror starts bending beams 2 turns after you place it.
   - `s_i`: player i's streak on it, 0 to 4
 
 **Output**: one line: `PLACE x y type`, `TURN x y` or `WAIT`, optionally followed by a message.
+Tokens are separated by spaces; any other separator (a tab, for example) makes the line invalid.
 
 **Constraints**: 2 <= `playerCount` <= 4; 13 <= `N` <= 19, odd; response time 1000 ms on turn 1, 50 ms after.
 Rows and lists are sorted by `y`, then `x`.

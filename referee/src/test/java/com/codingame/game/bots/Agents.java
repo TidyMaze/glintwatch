@@ -16,7 +16,7 @@ public final class Agents {
         return Config.forLeague(Integer.getInteger("glintwatch.league", 3));
     }
 
-    /** Builds a bot by name: wait, random, self, greedy, plus, crash, slow. */
+    /** Builds a bot by name: wait, random, self, greedy, plus, crash. */
     public static Bot create(String name, Config cfg, long seed) {
         switch (name) {
             case "wait": return new WaitBot();
@@ -81,6 +81,30 @@ public final class Agents {
 
     public static class Plus {
         public static void main(String[] a) throws IOException { loop(new GreedyBot(cfg(), GreedyBot.Mode.PLUS), System.in, System.out); }
+    }
+
+    /** WAIT on turn 1, then sleeps past the 50 ms turn limit: the referee must eliminate it for timeout. */
+    public static class Sleepy {
+        public static void main(String[] a) throws IOException {
+            loop(new SleepyBot(), System.in, System.out);
+        }
+    }
+
+    public static final class SleepyBot implements Bot {
+        private int turn;
+
+        public void init(List<String> l) {}
+
+        public String act(List<String> l) {
+            if (++turn >= 2) {
+                try {
+                    Thread.sleep(400);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            return "WAIT";
+        }
     }
 
     /** Prints an unknown command: the referee must deactivate it. */

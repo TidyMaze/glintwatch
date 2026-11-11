@@ -10,7 +10,7 @@ import com.codingame.game.engine.Config;
 import com.codingame.gameengine.runner.MultiplayerGameRunner;
 import com.codingame.gameengine.runner.simulate.GameResult;
 
-class RefereeTest {
+public class RefereeTest {
     private static GameResult run(int league, long seed, Class<?>... agents) {
         System.setProperty("glintwatch.league", String.valueOf(league));
         MultiplayerGameRunner runner = new MultiplayerGameRunner();
@@ -19,9 +19,45 @@ class RefereeTest {
         for (int i = 0; i < agents.length; i++) runner.addAgent(agents[i], "Bot" + i);
         GameResult r = runner.simulate();
         for (String err : r.errors.getOrDefault("referee", java.util.Collections.emptyList()))
-            assertTrue(err == null || err.isEmpty(), "league " + league + " seed " + seed + ": " + err);
+            assertTrue(isDiagnostic(err), "league " + league + " seed " + seed + ": " + err);
         assertEquals(agents.length, r.scores.size(), "scores " + r.scores + " summaries " + r.summaries);
         return r;
+    }
+
+    /** Referee stderr may only hold its own [glintwatch] diagnostic lines (read in CG's "Game information" tab). */
+    public static boolean isDiagnostic(String err) {
+        if (err == null || err.isEmpty()) return true;
+        for (String line : err.split("\n")) if (!line.isEmpty() && !line.startsWith("[glintwatch] ")) return false;
+        return true;
+    }
+
+    @Test
+    void botOverTheTurnTimeIsEliminatedForTimeout() {
+        GameResult r = run(1, 4L, Agents.Sleepy.class, Agents.Wait.class, Agents.Wait.class);
+        assertEquals(-1, r.scores.get(0).intValue());
+        assertTrue(String.join("", r.summaries).contains("eliminated: timeout"));
+    }
+
+    @Test
+    void refereeLogsToStderrOnlyWithTheDiagSwitchAndNeverInTheSummary() {
+        System.setProperty("glintwatch.diag", "true");
+        GameResult on;
+        try {
+            on = run(1, 9L, Agents.Wait.class, Agents.Greedy.class);
+        } finally {
+            System.clearProperty("glintwatch.diag");
+        }
+        GameResult off = run(1, 9L, Agents.Wait.class, Agents.Greedy.class);
+        String onErr = stderr(on), offErr = stderr(off);
+        assertTrue(onErr.contains("[glintwatch] init start") && onErr.contains("[glintwatch] turn 1 done"), onErr);
+        assertEquals("", offErr.trim(), "no referee stderr in shipped mode");
+        assertFalse(String.join("", on.summaries).contains("[glintwatch]"), "players never see diagnostics");
+        assertFalse(String.join("", off.summaries).contains("[glintwatch]"));
+    }
+
+    private static String stderr(GameResult r) {
+        return String.join("\n", r.errors.getOrDefault("referee", java.util.Collections.emptyList()).stream()
+            .filter(java.util.Objects::nonNull).toArray(String[]::new));
     }
 
     @Test
@@ -43,7 +79,7 @@ class RefereeTest {
         for (int league = 1; league <= 4; league++) {
             GameResult r = run(league, 11L, Agents.Plus.class, Agents.Greedy.class, Agents.Self.class, Agents.Random.class);
             for (String err : r.errors.getOrDefault("referee", java.util.Collections.emptyList()))
-                assertTrue(err == null || err.isEmpty(), "league " + league + ": " + err);
+                assertTrue(isDiagnostic(err), "league " + league + ": " + err);
             long size = 0;
             for (String v : r.views) size += v == null ? 0 : v.length();
             System.out.println("league " + league + " replay chars " + size + " frames " + r.views.size());
@@ -72,10 +108,18 @@ class RefereeTest {
     }
 
     @Test
+    void viewerRegistersBeamYardLockAndCoordinateToggles() {
+        GameResult r = run(4, 5L, Agents.Plus.class, Agents.Greedy.class, Agents.Self.class, Agents.Random.class);
+        String all = String.join("", r.views);
+        for (String t : new String[] {"beam0", "beam1", "beam2", "beam3", "yards", "locks", "coords"})
+            assertTrue(all.contains("\"" + t + "\""), "toggle " + t);
+    }
+
+    @Test
     void chattyBotMessageIsShownWithoutError() {
         GameResult r = run(1, 2L, Agents.Chatty.class, Agents.Wait.class);
         for (String err : r.errors.getOrDefault("referee", java.util.Collections.emptyList()))
-            assertTrue(err == null || err.isEmpty(), err);
+            assertTrue(isDiagnostic(err), err);
         assertEquals(0, r.scores.get(0).intValue());
     }
 
