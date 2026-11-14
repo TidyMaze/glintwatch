@@ -87,7 +87,7 @@ check("action numbers", G._inline_html("`PLACE 5 3 1`"), "<action>PLACE</action>
 check("const number", G._inline_html("`-1` and `30`"), "<const>-1</const> and <const>30</const>")
 check("const symbols", G._inline_html("`#` `/` `\\` `E` `A` `2`"), "<const>#</const> <const>/</const> <const>\\</const> <const>E</const> <const>A</const> <const>2</const>")
 check("directions const", G._inline_html("(`E`, `S`, `W` or `N`)"), "(<const>E</const>, <const>S</const>, <const>W</const> or <const>N</const>)")
-check("var", G._inline_html("`playerCount` `N = 13` `s_i`"), "<var>playerCount</var> <var>N = 13</var> <var>s_i</var>")
+check("var", G._inline_html("`playerCount` `N = 13` `s_i`"), "<var>playerCount</var> <var>N</var> = <const>13</const> <var>s_i</var>")
 check("link", G._inline_html("on GitHub: https://github.com/TidyMaze/glintwatch"),
       'on GitHub: <a href="https://github.com/TidyMaze/glintwatch" target="_blank">GitHub</a>')
 check("lineno", G._io_line("Next `N` lines: a string `row`"), '<p><span class="statement-lineno">Next <var>N</var> lines: </span>a string <var>row</var></p>')
@@ -157,7 +157,7 @@ p1, p4 = G.page(mini, 1), G.page(mini, 4)
 for cls in ['class="statement_back"', 'statement-league-alert-content', "This league:</b> Night falls.", 'statement-section statement-goal',
             'icon-goal', 'statement-rules-content', '>The reef</h3>', 'statement-victory-conditions', 'statement-lose-conditions',
             'statement-expertrules', 'Technical Details', 'statement-protocol', 'Game Input/Output',
-            '<div class="title">Initialization Input</div>', '<div class="title">Input for one game turn</div>',
+            '<div class="title">Initialization input</div>', '<div class="title">Input for one game turn</div>',
             '<div class="title">Output for one game turn</div>', '<div class="title">Constraints</div>',
             'What is in store for me in the higher leagues?', '<li>Rocks next.</li>']:
     check("level1 has " + cls, cls in p1, True)
@@ -165,6 +165,11 @@ hidden_tail = "> ### Example\n> Text.\n> [Bronze+] Later.\n>\n> ### Game input\n
 check("heading after a hidden last line", [t for t, n, b in G._sections(G.level_markdown(hidden_tail, 1))], ["Example", "Game input"])
 check("level4 no preview", "What is in store" in p4, False)
 check("level4 opener", "This league:</b> Tides." in p4, True)
+# v20 audit: no constant in <var>, command words always <action>, x1..x4 constants
+check("v20 life 20", G._inline_html("`life 20`"), "<var>life</var> <const>20</const>")
+check("v20 lock -1", G._inline_html("`lock -1`"), "<var>lock</var> <const>-1</const>")
+check("v20 x1", G._inline_html("pays `x1`, `x4`"), "pays <const>x1</const>, <const>x4</const>")
+check("v20 caption TURN", G._inline_html("After a TURN the lock reads 2; WAIT"), "After a <action>TURN</action> the lock reads 2; <action>WAIT</action>")
 check("no h2 for subsections", "<h2>The reef</h2>" in p1, False)
 
 check("v5 preferred", G.statement_block("## Statement v4\n> old\n## Statement v5 (staged)\n> new\n# History\n"), "> new")

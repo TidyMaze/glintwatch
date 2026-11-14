@@ -13,7 +13,7 @@ class StatementFilesTest {
     private static final String[] REQUIRED = {"class=\"statement_back\"", "statement-league-alert-content", "This league:",
         "statement-section statement-goal", "icon-goal", "statement-section statement-rules", "statement-rules-content",
         "statement-victory-conditions", "statement-lose-conditions", "statement-section statement-expertrules",
-        "statement-section statement-protocol", "<div class=\"title\">Initialization Input</div>",
+        "statement-section statement-protocol", "<div class=\"title\">Initialization input</div>",
         "<div class=\"title\">Input for one game turn</div>", "<div class=\"title\">Output for one game turn</div>",
         "<div class=\"title\">Constraints</div>", "statement-lineno", "<action>PLACE</action>", "<const>", "<var>",
         "href=\"https://github.com/TidyMaze/glintwatch\""};

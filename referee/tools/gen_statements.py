@@ -185,7 +185,7 @@ LITERALS = {"hello"}  # reviewer 5DN1L: the example message is a constant, not a
 
 def _token(t):
     e = html.escape(t, quote=False)
-    return "<const>%s</const>" % e if re.fullmatch(r"-?\d+", t) or t in SYMBOLS or t in LITERALS else "<var>%s</var>" % e
+    return "<const>%s</const>" % e if re.fullmatch(r"-?\d+|x\d", t) or t in SYMBOLS or t in LITERALS else "<var>%s</var>" % e
 
 
 def _code(c):
@@ -195,6 +195,8 @@ def _code(c):
         return " ".join(["<action>%s</action>" % toks[0]] + [_token(t) for t in toks[1:]])
     if len(toks) == 1:
         return _token(toks[0])
+    if any(_token(t).startswith("<const>") for t in toks):  # v20: no constant inside <var>
+        return " ".join(t if t == "=" else _token(t) for t in toks)
     return "<var>%s</var>" % html.escape(c, quote=False)
 
 
@@ -210,6 +212,7 @@ def _inline_html(s):
         else:
             e = html.escape(p, quote=False)
             e = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", e)
+            e = re.sub(r"\b(PLACE|TURN|WAIT)\b", r"<action>\1</action>", e)  # v20: command words in captions too
             e = re.sub(r"https://github\.com/[\w./-]+", lambda m: '<a href="%s" target="_blank">GitHub</a>' % m.group(0), e)
             res.append(e)
     return "".join(res).replace(NEW_OPEN, '<span style="%s">' % NEW_STYLE).replace(NEW_CLOSE, "</span>")
@@ -334,7 +337,7 @@ def read_pitch(description):
 
 H3 = '<h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">%s</h3>'
 LEAGUE_IMG = "//cdn.codingame.com/smash-the-code/statement/league_wood_04.png"
-IO_TITLES = {"Initialization input": "Initialization Input", "Input for one game turn": "Input for one game turn",
+IO_TITLES = {"Initialization input": "Initialization input", "Input for one game turn": "Input for one game turn",
              "Output for one game turn": "Output for one game turn", "Constraints": "Constraints"}
 
 

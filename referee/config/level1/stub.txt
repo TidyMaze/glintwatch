@@ -1,0 +1,31 @@
+read playerCount:int
+read size:int
+loop size read row:string(20)
+gameloop
+read myScore:int mirrors0:int mirrors1:int mirrors2:int mirrors3:int
+read mirrorCount:int
+loop mirrorCount read x:int y:int mirrorType:int lock:int life:int
+read crystalCount:int
+loop crystalCount read tide:int litBy:int myStreak:int
+write WAIT
+
+STATEMENT
+Light crystals with your lamp's beam: place mirrors to bend it.
+
+INPUT
+playerCount: number of players (2 to 4)
+size: width and height of the reef
+row: one reef row of size characters, from y = 0; character x is cell (x, y): . empty, 1 crystal (worth 1), A-D lamp of player 0-3 (A = you)
+myScore: your score
+mirrors0: mirrors you can still place; mirrors1-mirrors3: the other players' (-1 if eliminated or missing)
+mirrorCount: number of mirrors on the reef
+mirrorType: 0 for /, 1 for \ (backslash)
+lock: always 0 in this league
+life: always -1 in this league (mirrors never wear)
+crystalCount: number of crystals; one line each, in reef order (by y, then x)
+tide: always 0 (unused)
+litBy: player who lit it alone last turn, -1 nobody, -2 several
+myStreak: always 0 in this league
+
+OUTPUT
+PLACE x y type | WAIT, optionally followed by a message

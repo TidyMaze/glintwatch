@@ -1166,17 +1166,17 @@ Candidates (vote-analyst builds and measures; free to find better):
 > - `.` empty: a beam goes through;
 > - `1` `2` `3` a crystal and its value: a beam goes through and **lights** the crystal;
 > - `A` `B` `C` `D` a lamp: a beam that reaches it stops;
-> - [Wood 1+] `#` rock: a beam stops. [Wood 2 only] There are no rocks.
+> - [Wood 1+] `#` rock: a beam stops.
 > - [below Silver] Every crystal is worth `1`.
 >
 > ### Lamps and beams
 > A lamp fires a straight-line beam towards the opposite edge.
 > - Every lamp fires one beam each turn, after all actions of the turn.
-> - The beam moves cell by cell until it leaves the reef, reaches a rock or reaches a lamp.
+> - The beam moves cell by cell until it leaves the reef, [Wood 1+] reaches a rock[/] or reaches a lamp.
 > - Beams never block each other.
 > - A beam cannot loop: it never enters the same cell twice in the same direction.
 > - A beam that crosses the same crystal twice lights it once.
-> - At the start, the straight line of each lamp holds no crystal, rock or mirror: a beam must be bent to score.
+> - At the start, the straight line of each lamp holds no crystal, [Wood 1+] rock[/] or mirror: a beam must be bent to score.
 >
 > [Wood 2 only] ![Where a beam stops](img/stops_wood.png "A beam stops when it leaves the reef or reaches a lamp.")
 >
@@ -1229,12 +1229,12 @@ Candidates (vote-analyst builds and measures; free to find better):
 > [Wood only] turn `t+3` for a mirror placed on turn `t`[/][Bronze+] turn `t+4` for a mirror placed on turn `t`[/].
 > [Wood only] A mirror becomes active as soon as it is placed.
 >
-> [Wood 1+] ![Turning a mirror and its lock](img/lock.png "After a TURN the lock reads 2, then drops by 1 each turn; TURN works again at 0.")
+> [Wood 1+] ![Turning a mirror and its lock](img/lock.png "After a `TURN` the lock reads 2, then drops by 1 each turn; `TURN` works again at 0.")
 >
 > **Impossible actions** are replaced by `WAIT` (the reason is shown in the game summary):
 > - a cell outside the reef
 > - a type other than `0` or `1`
-> - a cell that is not empty (rock, crystal, lamp, mirror, [Bronze+] pending mirror)
+> - a cell that is not empty ([Wood 1+] rock, [/]crystal, lamp, mirror, [Bronze+] pending mirror)
 > - a cell in another player's yard
 > - no available mirror
 > - a number out of range (negative or too large)
@@ -1257,10 +1257,10 @@ Candidates (vote-analyst builds and measures; free to find better):
 >
 > [Wood 1+] Each player has a **streak** (`0` to `4`) on each crystal. Each turn, for each crystal:
 > - lit by **exactly one** player: that player's streak grows by `1` (max `4`), then the player gains
->   `value x` the new streak; every other player's streak drops by `1` (min `0`);
+>   `value` times the new streak; every other player's streak drops by `1` (min `0`);
 > - lit by **two or more** players: nobody gains; those players keep their streak; the others' drop by `1`;
 > - lit by **nobody**: every streak drops by `1` (min `0`).
-> A crystal kept alone pays x1, x2, x3, then x4 every turn.
+> A crystal kept alone pays `x1`, `x2`, `x3`, then `x4` every turn.
 >
 > [Wood 1+] ![A crystal lit by one beam scores; lit by two beams it scores nothing](img/contested.png)
 >
@@ -1301,13 +1301,13 @@ Candidates (vote-analyst builds and measures; free to find better):
 > [Wood 2 only] ![Order of a turn](img/order_wood.png "Supply, then placements, then every lamp fires, then scoring.")
 >
 > ### End of the game
-> The game lasts `150` turns in every league, or ends earlier when:
+> The game lasts `150` turns, or ends earlier when:
 > - fewer than two players remain;
 > - every remaining player has done nothing (`WAIT`, an impossible action, or a placement that failed on a shared
 >   cell) for `20` turns in a row: the referee then plays the remaining turns itself with every player waiting (lamps still fire and score each turn), and the
 >   final scores are the scores after the last turn.
 >
-> Equal scores share the rank. An eliminated player gets a score of `-1`. Its lamp stops firing and acts as a rock;
+> Equal scores share the rank. An eliminated player gets a score of `-1`. Its lamp stops firing and [Wood 2 only] still stops beams[/][Wood 1+] acts as a rock[/];
 > its yard stays protected; its mirrors stay on the reef. The input shows it with `-1` mirrors.
 >
 > ### Victory conditions
@@ -1338,7 +1338,7 @@ Candidates (vote-analyst builds and measures; free to find better):
 >   lamp of player `0` `1` `2` `3`.
 >
 > **Input for one game turn**
-> The same fields are sent in every league. A field that the current league does not use has a fixed value, stated below.
+> A field that this league does not use has a fixed value, stated below.
 > Turns are numbered from `1`; the input is not numbered.
 > - Line 1: five space-separated integers `myScore` `mirrors0` `mirrors1` `mirrors2` `mirrors3`:
 >   - `myScore`: the score of player `0`.
@@ -1348,15 +1348,15 @@ Candidates (vote-analyst builds and measures; free to find better):
 >   pending or active,[/] fills its cell: no mirror can be placed there[Bronze+], except a mirror with `life` `0`[/].
 >   - `x` `y`: integers, the mirror's cell.
 >   - `mirrorType`: an integer, `0` (`/`) or `1` (`\`). The type is always real, pending or not.
->   - `lock`: an integer, the number of turns before it can be turned; `0` when it can be turned. It is always `0` in Wood 2 (no `TURN` there). [Bronze+] `-1` while it is pending, when it does not bend beams yet.
->   - `life`: an integer, `-1` in the Wood leagues (mirrors never wear there). [Bronze+] Active turns left before it shatters, and `0` for a mirror that shattered at the end of the last turn (listed once; its cell is empty).
+>   - `lock`: an integer, the number of turns before it can be turned; `0` when it can be turned. [Wood 2 only] It is always `0` in this league (no `TURN`).[/] [Bronze+] `-1` while it is pending, when it does not bend beams yet.
+>   - `life`: an integer. [Wood only] Always `-1`: mirrors never wear in this league.[/] [Bronze+] Active turns left before it shatters, and `0` for a mirror that shattered at the end of the last turn (listed once; its cell is empty).
 > - Next line: an integer `crystalCount`: the number of crystals.
 > - Next `crystalCount` lines, one per crystal in reef order (by `y`, then `x`): three space-separated integers
 >   `tide` `litBy` `myStreak`:
->   - `tide`: an integer, always `0` in every league (crystals are always awake); the field stays so that the input is the same in every league.
+>   - `tide`: an integer, always `0` (unused; crystals are always awake).
 >   - `litBy`: an integer, the id of the player who lit it alone on the last turn; `-1` nobody (and on turn `1`); `-2` several
 >     players.
->   - `myStreak`: an integer, player `0`'s streak on it, `0` to `4`. Ignore it until Wood 1.
+>   - `myStreak`: an integer, player `0`'s streak on it, `0` to `4`. [Wood 2 only] It is always `0` in this league (no streaks).[/]
 >
 > **Output for one game turn**
 > - One line: one action, optionally followed by a space and a message:
