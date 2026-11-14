@@ -19,12 +19,12 @@
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">The reef</h3>
 <p>The reef is represented as a square grid. The <var>x</var>-coordinate indicates the column (<const>0</const> at the left), and the <var>y</var>-coordinate indicates the row (<const>0</const> at the top/north). Its side is <var>size</var> cells.</p>
 <p><const>2</const> to <const>4</const> players play. Each player owns a <strong>lamp</strong> on one edge. The reef looks the same from every lamp (90-degree rotational symmetry). With <const>2</const> players the lamps are on opposite edges; with <const>3</const> players one edge has no lamp.</p>
-<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/setup.png" alt="The reef: lamps, yards and axes" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Lamps on the edges, their 5 x 3 yards and the unobstructed straight path of each beam at the start; x grows to the east, y to the south.</div>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/setup.png" alt="The reef: lamps, yards and axes" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Lamps on the edges, their <const>5</const> x <const>3</const> yards and the unobstructed straight path of each beam at the start; x grows to the east, y to the south.</div>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Cells</h3>
 <p>Each cell of the reef is one of:</p>
 <ul>
 <li><const>.</const> empty: a beam goes through;</li>
-<li><const>1</const> <const>2</const> <const>3</const> a crystal and its value: a beam goes through and <strong>lights</strong> the crystal;</li>
+<li><const>1</const> a crystal: a beam goes through and <strong>lights</strong> the crystal;</li>
 <li><const>A</const> <const>B</const> <const>C</const> <const>D</const> a lamp: a beam that reaches it stops;</li>
 <li>Every crystal is worth <const>1</const>.</li>
 </ul>
@@ -32,11 +32,11 @@
 <p>A lamp fires a straight-line beam towards the opposite edge.</p>
 <ul>
 <li>Every lamp fires one beam each turn, after all actions of the turn.</li>
-<li>The beam moves cell by cell until it leaves the reef, or reaches a lamp.</li>
+<li>The beam moves cell by cell until it leaves the reef or reaches a lamp.</li>
 <li>Beams never block each other.</li>
 <li>A beam cannot loop: it never enters the same cell twice in the same direction.</li>
 <li>A beam that crosses the same crystal twice lights it once.</li>
-<li>At the start, the straight line of each lamp holds no crystal, or mirror: a beam must be bent to score.</li>
+<li>At the start, the straight line of each lamp holds no crystal or mirror: a beam must be bent to score.</li>
 </ul>
 <img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/stops_wood.png" alt="Where a beam stops" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">A beam stops when it leaves the reef or reaches a lamp.</div>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Mirrors</h3>
@@ -79,7 +79,7 @@
 <ul>
 <li>a cell outside the reef</li>
 <li>a type other than <const>0</const> or <const>1</const></li>
-<li>a cell that is not empty ( crystal, lamp, mirror)</li>
+<li>a cell that is not empty (crystal, lamp, mirror)</li>
 <li>a cell in another player's yard</li>
 <li>no available mirror</li>
 <li>a number out of range (negative or too large)</li>
@@ -118,7 +118,7 @@
 <br />
 <div class="statement-section statement-expertrules">
 <h2><span class="icon icon-expertrules">&nbsp;</span><span>Technical Details</span></h2>
-<div class="statement-expert-rules-content"><ul style="padding-left: 20px; padding-bottom: 0"><li>Rows and lists are sorted by <var>y</var>, then <var>x</var>.</li><li>Derived information: the turn number is the count of turns read (the first is <const>1</const>); the other players' scores and streaks follow from the beams, which can be traced each turn from the mirror list of the next turn.</li><li>The referee source code is on <a href="https://github.com/TidyMaze/glintwatch" target="_blank">GitHub</a></li><li>Glintwatch is an original game; its idea comes from the genre of laser-and-mirror reflection puzzles.</li></ul></div>
+<div class="statement-expert-rules-content"><ul style="padding-left: 20px; padding-bottom: 0"><li>Rows and lists are sorted by <var>y</var>, then <var>x</var>.</li><li>Derived information: the turn number is the count of turns read (the first is <const>1</const>); the other players' scores and streaks follow from the beams, which can be traced each turn from the mirror list of the next turn.</li><li>The referee source code is on <a href="https://github.com/TidyMaze/glintwatch/blob/main/referee/src/main/java/com/codingame/game/Referee.java" target="_blank">GitHub</a></li><li>Glintwatch is an original game; its idea comes from the genre of laser-and-mirror reflection puzzles.</li></ul></div>
 </div>
 </div>
 </div>
@@ -131,7 +131,7 @@
 <div class="blk"><div class="title">Initialization input</div><div class="text">
 <p><span class="statement-lineno">Line 1: </span>an integer <var>playerCount</var>: the number of players (<const>2</const> to <const>4</const>), also the number of lamps on the reef.</p>
 <p><span class="statement-lineno">Line 2: </span>an integer <var>size</var>: the width and height of the reef.</p>
-<p><span class="statement-lineno">Next <var>size</var> lines: </span>a string <var>row</var> of <var>size</var> characters, the reef rows from <var>y</var> = <const>0</const>: character <var>x</var> of row <var>y</var> is cell (<var>x</var>, <var>y</var>). <const>.</const> empty, <const>1</const> <const>2</const> <const>3</const> crystal of that value, <const>A</const> <const>B</const> <const>C</const> <const>D</const> lamp of player <const>0</const> <const>1</const> <const>2</const> <const>3</const>.</p>
+<p><span class="statement-lineno">Next <var>size</var> lines: </span>a string <var>row</var> of <var>size</var> characters, the reef rows from <var>y</var> = <const>0</const>: character <var>x</var> of row <var>y</var> is cell (<var>x</var>, <var>y</var>). <const>.</const> empty, <const>1</const> crystal, <const>A</const> <const>B</const> <const>C</const> <const>D</const> lamp of player <const>0</const> <const>1</const> <const>2</const> <const>3</const>.</p>
 </div></div>
 <div class="blk"><div class="title">Input for one game turn</div><div class="text">
 <p>A field that this league does not use has a fixed value, stated below. Turns are numbered from <const>1</const>; the input is not numbered.</p>
@@ -172,7 +172,7 @@
 <p>Example: <action>PLACE</action> <const>5</const> <const>3</const> <const>1</const> <const>hello</const></p>
 </div></div>
 <div class="blk"><div class="title">Constraints</div><div class="text">
-<const>2</const> ≤ number of players ≤ <const>4</const><br>
+<const>2</const> ≤ <var>playerCount</var> ≤ <const>4</const><br>
 <const>13</const> ≤ <var>size</var> ≤ <const>19</const>, <var>size</var> is odd<br>
 Response time for the first turn ≤ <const>1000</const> ms<br>
 Response time for one turn ≤ <const>50</const> ms<br>

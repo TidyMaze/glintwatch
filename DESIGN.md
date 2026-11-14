@@ -1159,12 +1159,12 @@ Candidates (vote-analyst builds and measures; free to find better):
 >
 > `2` to `4` players play. Each player owns a **lamp** on one edge. The reef looks the same from every lamp (90-degree rotational symmetry). With `2` players the lamps are on opposite edges; with `3` players one edge has no lamp.
 >
-> ![The reef: lamps, yards and axes](img/setup.png "Lamps on the edges, their 5 x 3 yards and the unobstructed straight path of each beam at the start; x grows to the east, y to the south.")
+> ![The reef: lamps, yards and axes](img/setup.png "Lamps on the edges, their `5` x `3` yards and the unobstructed straight path of each beam at the start; x grows to the east, y to the south.")
 >
 > ### Cells
 > Each cell of the reef is one of:
 > - `.` empty: a beam goes through;
-> - `1` `2` `3` a crystal and its value: a beam goes through and **lights** the crystal;
+> - [below Silver] `1` a crystal: a beam goes through and **lights** the crystal;[Silver+] `1` `2` `3` a crystal and its value: a beam goes through and **lights** the crystal;
 > - `A` `B` `C` `D` a lamp: a beam that reaches it stops;
 > - [Wood 1+] `#` rock: a beam stops.
 > - [below Silver] Every crystal is worth `1`.
@@ -1172,11 +1172,11 @@ Candidates (vote-analyst builds and measures; free to find better):
 > ### Lamps and beams
 > A lamp fires a straight-line beam towards the opposite edge.
 > - Every lamp fires one beam each turn, after all actions of the turn.
-> - The beam moves cell by cell until it leaves the reef, [Wood 1+] reaches a rock[/] or reaches a lamp.
+> - The beam moves cell by cell until it leaves the reef[Wood 1+], reaches a rock[/] or reaches a lamp.
 > - Beams never block each other.
 > - A beam cannot loop: it never enters the same cell twice in the same direction.
 > - A beam that crosses the same crystal twice lights it once.
-> - At the start, the straight line of each lamp holds no crystal, [Wood 1+] rock[/] or mirror: a beam must be bent to score.
+> - At the start, the straight line of each lamp holds no crystal[Wood 1+], rock[/] or mirror: a beam must be bent to score.
 >
 > [Wood 2 only] ![Where a beam stops](img/stops_wood.png "A beam stops when it leaves the reef or reaches a lamp.")
 >
@@ -1234,7 +1234,7 @@ Candidates (vote-analyst builds and measures; free to find better):
 > **Impossible actions** are replaced by `WAIT` (the reason is shown in the game summary):
 > - a cell outside the reef
 > - a type other than `0` or `1`
-> - a cell that is not empty ([Wood 1+] rock, [/]crystal, lamp, mirror, [Bronze+] pending mirror)
+> - a cell that is not empty (crystal, lamp, mirror[Wood 1+], rock[/][Bronze+], pending mirror[/])
 > - a cell in another player's yard
 > - no available mirror
 > - a number out of range (negative or too large)
@@ -1334,7 +1334,7 @@ Candidates (vote-analyst builds and measures; free to find better):
 > - Line 1: an integer `playerCount`: the number of players (`2` to `4`), also the number of lamps on the reef.
 > - Line 2: an integer `size`: the width and height of the reef.
 > - Next `size` lines: a string `row` of `size` characters, the reef rows from `y = 0`: character `x` of row `y` is
->   cell (`x`, `y`). `.` empty, [Wood 1+] `#` rock,[/] `1` `2` `3` crystal of that value, `A` `B` `C` `D`
+>   cell (`x`, `y`). `.` empty, [Wood 1+] `#` rock,[/] [below Silver] `1` crystal,[/] [Silver+] `1` `2` `3` crystal of that value,[/] `A` `B` `C` `D`
 >   lamp of player `0` `1` `2` `3`.
 >
 > **Input for one game turn**
@@ -1371,7 +1371,7 @@ Candidates (vote-analyst builds and measures; free to find better):
 > - Example: `PLACE 5 3 1 hello`
 >
 > **Constraints**
-> - 2 ≤ number of players ≤ 4
+> - 2 ≤ `playerCount` ≤ 4
 > - 13 ≤ `size` ≤ 19, `size` is odd
 > - Response time for the first turn ≤ 1000 ms
 > - Response time for one turn ≤ 50 ms
@@ -1380,7 +1380,7 @@ Candidates (vote-analyst builds and measures; free to find better):
 > - Rows and lists are sorted by `y`, then `x`.
 > - Derived information: the turn number is the count of turns read (the first is `1`); the other players' scores and
 >   streaks follow from the beams, which can be traced each turn from the mirror list of the next turn.
-> - The referee source code is on https://github.com/TidyMaze/glintwatch
+> - The referee source code is on https://github.com/TidyMaze/glintwatch/blob/main/referee/src/main/java/com/codingame/game/Referee.java
 > - Glintwatch is an original game; its idea comes from the genre of laser-and-mirror reflection puzzles.
 >
 > ### League preview

@@ -16,7 +16,7 @@ class StatementFilesTest {
         "statement-section statement-protocol", "<div class=\"title\">Initialization input</div>",
         "<div class=\"title\">Input for one game turn</div>", "<div class=\"title\">Output for one game turn</div>",
         "<div class=\"title\">Constraints</div>", "statement-lineno", "<action>PLACE</action>", "<const>", "<var>",
-        "href=\"https://github.com/TidyMaze/glintwatch\""};
+        "href=\"https://github.com/TidyMaze/glintwatch/blob/main/referee/src/main/java/com/codingame/game/Referee.java\""};
 
     private static String level(int k) throws Exception {
         return new String(Files.readAllBytes(Path.of("config/level" + k + "/statement_en.html")), StandardCharsets.UTF_8);
