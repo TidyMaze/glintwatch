@@ -92,14 +92,16 @@ public final class FuzzAgents {
             this.rnd = new Random(p.seed);
         }
 
-        /** V5.1c init (DESIGN V5.8): the reef string, then the size; lamp letters are relative ids (A = me). */
+        /** v19 init: the player count, the size, then size reef rows; lamp letters are relative ids (A = me). */
         @Override
         public void init(List<String> l) {
             try {
-                String reef = l.get(0);
+                int count = Integer.parseInt(l.get(0).trim());
                 p.n = Integer.parseInt(l.get(1).trim());
                 if (p.n < 13 || p.n > 19 || p.n % 2 == 0) p.bad("size " + p.n);
-                if (l.size() != 2) p.bad("init has " + l.size() + " lines, expected 2");
+                if (l.size() != 2 + p.n) p.bad("init has " + l.size() + " lines, expected " + (2 + p.n));
+                for (int y = 2; y < l.size(); y++) if (l.get(y).length() != p.n) p.bad("reef row " + (y - 2) + " '" + l.get(y) + "'");
+                String reef = String.join("", l.subList(2, l.size()));
                 if (reef.length() != p.n * p.n || !reef.matches("[.#123ABCD]*")) p.bad("reef '" + reef + "'");
                 for (int y = 0; y < p.n; y++) p.rows.add(reef.substring(y * p.n, Math.min(reef.length(), (y + 1) * p.n)));
                 p.myId = 0;
@@ -107,6 +109,7 @@ public final class FuzzAgents {
                 while (letters < 4 && reef.indexOf((char) ('A' + letters)) >= 0) letters++;
                 p.playerCount = letters;
                 if (letters < 2) p.bad("only " + letters + " lamps");
+                if (letters != count) p.bad("player count " + count + " but " + letters + " lamps");
                 for (int k = letters; k < 4; k++) if (reef.indexOf((char) ('A' + k)) >= 0) p.bad("lamp letters not consecutive");
                 for (int k = 0; k < letters; k++) {
                     int c = reef.indexOf((char) ('A' + k)), x = c % p.n, y = c / p.n;

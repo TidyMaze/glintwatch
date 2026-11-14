@@ -25,7 +25,7 @@ public final class Protocol {
         return -1;
     }
 
-    /** Init: the reef (size*size chars, row by row; lamp letters by relative id), then the size. */
+    /** Init (v19, reviewer 5DN1L): the player count, the size, then size reef rows of size chars (lamp letters by relative id). */
     public static List<String> initLinesV5(Game g, int viewer) {
         Board b = g.board;
         int[] order = relativeOrder(g, viewer);
@@ -44,8 +44,9 @@ public final class Protocol {
             }
         }
         List<String> lines = new ArrayList<>();
-        lines.add(reef.toString());
+        lines.add(String.valueOf(g.playerCount));
         lines.add(String.valueOf(b.n));
+        for (int y = 0; y < b.n; y++) lines.add(reef.substring(y * b.n, (y + 1) * b.n));
         return lines;
     }
 

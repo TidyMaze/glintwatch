@@ -46,8 +46,11 @@ public final class Tracker {
     }
 
     public void init(List<String> lines) {
-        String reef = lines.get(0).trim();
+        // v19 init: player count, size, then size reef rows
         n = Integer.parseInt(lines.get(1).trim());
+        StringBuilder rows = new StringBuilder();
+        for (int y = 0; y < n; y++) rows.append(lines.get(2 + y).trim());
+        String reef = rows.toString();
         int[] seatByRel = {-1, -1, -1, -1};
         for (int p = 0; p < n * n; p++) {
             char ch = reef.charAt(p);

@@ -18,10 +18,12 @@ class Player { // not public: compiles as Boss.java or Player.java
         Bot bot = new StrongBot(cfg, 4);
         java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(System.in));
         List<String> init = new ArrayList<>();
-        String reef = in.readLine();
-        if (reef == null) return;
-        init.add(reef);
-        init.add(in.readLine());
+        String count = in.readLine();
+        if (count == null) return;
+        init.add(count);
+        String size = in.readLine();
+        init.add(size);
+        for (int y = Integer.parseInt(size.trim()); y > 0; y--) init.add(in.readLine());
         bot.init(init);
         while (true) {
             List<String> turn = new ArrayList<>();
@@ -926,8 +928,11 @@ class Player { // not public: compiles as Boss.java or Player.java
         }
 
         public void init(List<String> lines) {
-            String reef = lines.get(0).trim();
+            // v19 init: player count, size, then size reef rows
             n = Integer.parseInt(lines.get(1).trim());
+            StringBuilder rows = new StringBuilder();
+            for (int y = 0; y < n; y++) rows.append(lines.get(2 + y).trim());
+            String reef = rows.toString();
             int[] seatByRel = {-1, -1, -1, -1};
             for (int p = 0; p < n * n; p++) {
                 char ch = reef.charAt(p);

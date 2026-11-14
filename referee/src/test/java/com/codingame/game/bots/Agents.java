@@ -47,10 +47,12 @@ public final class Agents {
     public static void loop(Bot bot, java.io.InputStream stdin, java.io.PrintStream stdout) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(stdin));
         List<String> init = new ArrayList<>();
-        String reef = in.readLine();
-        if (reef == null) return;
-        init.add(reef);
-        init.add(in.readLine());
+        String count = in.readLine();
+        if (count == null) return;
+        init.add(count);
+        String size = in.readLine();
+        init.add(size);
+        for (int y = Integer.parseInt(size.trim()); y > 0; y--) init.add(in.readLine());
         bot.init(init);
         while (true) {
             List<String> turn = new ArrayList<>();

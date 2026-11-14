@@ -1,5 +1,6 @@
-read reef:string(361)
+read playerCount:int
 read size:int
+loop size read row:string(20)
 gameloop
 read myScore:int mirrors0:int mirrors1:int mirrors2:int mirrors3:int
 read mirrorCount:int
@@ -12,8 +13,9 @@ STATEMENT
 Light crystals with your lamp's beam: place mirrors to bend it.
 
 INPUT
-reef: size*size characters, row by row from y = 0: cell (x, y) is reef[y*size+x]; . empty, # rock, 1-3 crystal value, A-D lamp of player 0-3 (A = you; the number of lamps is the number of players)
+playerCount: number of players (2 to 4)
 size: width and height of the reef
+row: one reef row of size characters, from y = 0; character x is cell (x, y): . empty, # rock, 1-3 crystal value, A-D lamp of player 0-3 (A = you)
 myScore: your score
 mirrors0: mirrors you can still place; mirrors1-mirrors3: the other players' (-1 if eliminated or missing)
 mirrorCount: number of mirrors on the reef

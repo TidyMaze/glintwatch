@@ -30,10 +30,12 @@ MAIN = '''
         Bot bot = %(bot)s;
         java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(System.in));
         List<String> init = new ArrayList<>();
-        String reef = in.readLine();
-        if (reef == null) return;
-        init.add(reef);
-        init.add(in.readLine());
+        String count = in.readLine();
+        if (count == null) return;
+        init.add(count);
+        String size = in.readLine();
+        init.add(size);
+        for (int y = Integer.parseInt(size.trim()); y > 0; y--) init.add(in.readLine());
         bot.init(init);
         while (true) {
             List<String> turn = new ArrayList<>();

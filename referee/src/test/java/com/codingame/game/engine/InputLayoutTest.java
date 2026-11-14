@@ -36,9 +36,10 @@ class InputLayoutTest {
         for (int league = 1; league <= 4; league++) {
             Game g = Game.fromSeed(7, 4, Config.forLeague(league));
             List<String> init = Protocol.initLinesV5(g, 0);
-            assertEquals(2, init.size(), "league " + league);
-            assertEquals(g.board.n * g.board.n, init.get(0).length(), "league " + league);
+            assertEquals(2 + g.board.n, init.size(), "league " + league);
+            assertEquals("4", init.get(0), "league " + league);
             assertEquals(String.valueOf(g.board.n), init.get(1), "league " + league);
+            for (int y = 0; y < g.board.n; y++) assertEquals(g.board.n, init.get(2 + y).length(), "league " + league + " row " + y);
         }
     }
 

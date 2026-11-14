@@ -33,23 +33,25 @@ class ProtocolV5Test {
     }
 
     @Test
-    void initIsTheReefStringWithRelativeLampLettersThenTheSize() {
+    void initIsPlayerCountThenSizeThenOneLinePerReefRowWithRelativeLampLetters() {
         Game g = new Game(example(), 4, Config.woodOne());
         List<String> me2 = Protocol.initLinesV5(g, 2);
-        assertEquals(2, me2.size());
-        assertEquals("13", me2.get(1));
-        String reef = me2.get(0);
-        assertEquals(169, reef.length());
+        assertEquals(2 + 13, me2.size());
+        assertEquals("4", me2.get(0), "player count");
+        assertEquals("13", me2.get(1), "size");
+        for (int y = 0; y < 13; y++) assertEquals(13, me2.get(2 + y).length(), "row " + y);
+        String reef = String.join("", me2.subList(2, 15));
         assertEquals('A', reef.charAt(Geometry.idx(12, 9, 13)), "own lamp (seat 2) is A");
         assertEquals('B', reef.charAt(Geometry.idx(3, 12, 13)), "next clockwise (seat 3)");
         assertEquals('C', reef.charAt(Geometry.idx(0, 3, 13)));
         assertEquals('D', reef.charAt(Geometry.idx(9, 0, 13)));
-        assertEquals('2', reef.charAt(Geometry.idx(5, 6, 13)));
+        assertEquals('2', me2.get(2 + 6).charAt(5), "row y=6 column x=5");
         assertEquals('#', reef.charAt(Geometry.idx(5, 10, 13)));
         Game g2 = new Game(example(), 2, Config.woodOne());
-        String r2 = Protocol.initLinesV5(g2, 0).get(0);
-        assertEquals('.', r2.charAt(Geometry.idx(9, 0, 13)), "empty seat lamp cell");
-        assertEquals('B', r2.charAt(Geometry.idx(12, 9, 13)));
+        List<String> two = Protocol.initLinesV5(g2, 0);
+        assertEquals("2", two.get(0));
+        assertEquals('.', two.get(2 + 0).charAt(9), "empty seat lamp cell");
+        assertEquals('B', two.get(2 + 9).charAt(12));
     }
 
     @Test
