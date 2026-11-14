@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-/** DESIGN V5.5: decided and stale early ends (STALE_TURNS = 20). */
+/** V6: the only early end is stale (STALE_TURNS = 20); the decided end is gone. */
 class EarlyEndTest {
     private static Board example() {
         Board b = Board.empty(13, 3);
@@ -20,34 +20,14 @@ class EarlyEndTest {
     }
 
     @Test
-    void bestTurnBoundPerLeague() {
-        Game w2 = new Game(example(), 2, Config.woodTwo()), w1 = new Game(example(), 2, Config.woodOne()),
-            si = new Game(example(), 2, Config.silver());
-        assertEquals(6, w2.maxGainPerTurn());
-        assertEquals(24, w1.maxGainPerTurn());
-        assertEquals(26, si.maxGainPerTurn());
-    }
-
-    @Test
-    void decidedWhenNoPairCanChangeOrderInTheTurnsLeft() throws Exception {
-        Config cfg = Config.woodOne();
-        cfg.maxTurns = 10;
-        Game g = new Game(example(), 2, cfg);
-        g.playTurn(new Command[] {c("PLACE 5 3 1"), c("WAIT")}); // P0 holds (5,6): 2, 4, 6, 8, 8 ...
-        while (!g.isOver()) g.playTurn(new Command[] {c("WAIT"), c("WAIT")});
-        assertEquals(8, g.turn, "after turn 8: 52 > 2 turns x 24");
-        assertEquals("decided", g.endReason());
-        assertEquals(52, g.score[0]);
-    }
-
-    @Test
-    void notDecidedWhileAPairCanStillSwap() throws Exception {
-        Config cfg = Config.woodOne();
-        cfg.maxTurns = 10;
-        Game g = new Game(example(), 2, cfg);
-        g.playTurn(new Command[] {c("PLACE 5 3 1"), c("WAIT")});
-        for (int t = 2; t <= 7; t++) g.playTurn(new Command[] {c("WAIT"), c("WAIT")});
-        assertFalse(g.isOver(), "after turn 7: 44 <= 3 x 24");
+    void noDecidedEndEvenWithAHugeLead() throws Exception {
+        for (int league = 1; league <= 4; league++) {
+            Game g = new Game(example(), 2, Config.forLeague(league));
+            g.score[0] = 100000;
+            g.playTurn(new Command[] {c("WAIT"), c("WAIT")});
+            assertFalse(g.isOver(), "league " + league + ": no decided end in V6");
+            assertNull(g.endReason());
+        }
     }
 
     @Test
@@ -59,7 +39,7 @@ class EarlyEndTest {
             played++;
         }
         assertEquals(20, played, "inputs stop after turn 20");
-        assertEquals(100, g.turn, "the remaining turns are played by the referee");
+        assertEquals(150, g.turn, "the remaining turns are played by the referee (V6: 150 in every league)");
         assertEquals("stale", g.endReason());
     }
 

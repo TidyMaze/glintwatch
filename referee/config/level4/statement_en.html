@@ -7,7 +7,7 @@
 <div style="color:#7cc576;background-color:rgba( 124 , 197 , 118 , 0.1 );padding:20px;margin-right:15px;margin-left:15px;margin-bottom:10px;text-align:left">
 <div style="text-align:center;margin-bottom:6px"><img src="//cdn.codingame.com/smash-the-code/statement/league_wood_04.png"></div>
 <p style="text-align:center;font-weight:700;margin-bottom:6px">This is a <b>league based</b> challenge.</p>
-<div class="statement-league-alert-content">For this challenge, multiple leagues for the same game are available. Once a program has proven its worth against the Boss, it accesses the higher league.<br><br><b>This league:</b> crystal tides, crystal values from 1 to 3, and strikes on rival lamps.</div>
+<div class="statement-league-alert-content">For this challenge, multiple leagues for the same game are available. Once a program has proven its worth against the Boss, it accesses the higher league.<br><br><b>This league:</b> crystal values from 1 to 3, and strikes on rival lamps.</div>
 </div>
 <div class="statement-section statement-goal">
 <h2><span class="icon icon-goal">&nbsp;</span><span>Goal</span></h2>
@@ -39,24 +39,28 @@
 <img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/mirrors.png" alt="How the two mirror types bend a beam" style="width: 100%; max-width: 400px; display: block; margin: 10px auto;" />
 <p>Mirrors belong to nobody: a mirror bends <strong>every</strong> beam that reaches it. Players cannot remove mirrors. Mirrors wear out (see below).</p>
 <p>The reef starts with a few mirrors. They appear in the mirror list from turn 1; the <var>reef</var> string shows their cells as <const>.</const>.</p>
+<h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Mirror supply</h3>
+<ul>
+<li>Each player starts with 12 mirrors, in every league, and gets 1 more at the start of turns 10, 20, 30 ... (the input of that turn already counts it). There is no cap on the hand.</li>
+<li>A shattered mirror does not come back to any hand.</li>
+</ul>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Actions</h3>
 <p>Each turn, each player prints <strong>one</strong> action:</p>
 <ul>
-<li><action>PLACE</action> <var>x</var> <var>y</var> <var>type</var>: put one of the player's mirrors on an empty cell.</li>
+<li><action>PLACE</action> <var>x</var> <var>y</var> <var>type</var>: put one of the player's mirrors on an empty cell. Mirrors come from the hand (see Mirror supply).</li>
 <li><action>TURN</action> <var>x</var> <var>y</var>: flip a mirror (<const>/</const> becomes <const>\</const> and back).</li>
 <li><action>WAIT</action>: do nothing.</li>
 </ul>
 <p>A message may follow the action, for example <action>PLACE</action> <const>5</const> <const>3</const> <const>1</const> <var>hello</var> (30 characters max).</p>
 <p><strong>Yards.</strong> Each lamp's yard is the 5 x 3 block of cells around it (the lamp cell, and every cell up to 2 cells away along the edge and up to 2 cells deep, diagonals included). Only the yard's owner may place or turn mirrors there; on every other cell any player may place or turn mirrors (mirrors have no owner). Beams cross yards freely. With 3 players the edge without a lamp has no yard. Lamps are not always at the middle of their edge: read their cells from the reef. Every lamp is at least 2 cells from a corner, so its yard fits inside the reef.</p>
 <p><strong>Same cell.</strong> If two or more players place a mirror on the same cell in the same turn, all of them fail and keep their mirror. If several players turn the same mirror in the same turn, it flips once.</p>
-<p><strong>Locks.</strong> Each mirror has a <var>lock</var>. A mirror can be turned only when its lock is 0. The lock is set to 5 when the mirror becomes active or is turned, then drops by 1 at the end of each following turn (so it reads 5 on the next turn's input). A <action>TURN</action> is allowed from the first turn whose input shows <var>lock</var> 0: turn <var>t+7</var> for a mirror placed on turn <var>t</var>.</p>
-<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/lock.png" alt="Turning a mirror and its lock" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">After a TURN the lock reads 5, then drops by 1 each turn; TURN works again at 0.</div>
+<p><strong>Locks.</strong> Each mirror has a <var>lock</var>. A mirror can be turned only when its lock is 0. The lock is set to 2 when the mirror becomes active or is turned, then drops by 1 at the end of each following turn (so it reads 2 on the next turn's input). A <action>TURN</action> is allowed from the first turn whose input shows <var>lock</var> 0: turn <var>t+4</var> for a mirror placed on turn <var>t</var>.</p>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/lock.png" alt="Turning a mirror and its lock" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">After a TURN the lock reads 2, then drops by 1 each turn; TURN works again at 0.</div>
 <p><strong>Impossible actions</strong> are replaced by <action>WAIT</action> (the reason is shown in the game summary): a cell outside the reef, a type other than 0 or 1, a cell that is not empty (rock, crystal, lamp, mirror, pending mirror), a cell in another player's yard, no mirror in hand, a number out of range (negative or too large), turning where there is no active mirror or the lock is not 0.</p>
 <p><strong>Invalid lines</strong> eliminate the player: an empty line, an unknown keyword (keywords are in capitals), missing numbers, or a number that is not a whole number. Spaces at the start and end of the line are ignored. Every token after the numbers is the message; a message longer than 30 characters is cut, not refused.</p>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Scoring</h3>
 <p>Each player has a <strong>streak</strong> (0 to 4) on each crystal. Each turn, for each crystal:</p>
 <ul>
-<li><span style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">if the crystal is asleep: all streaks on it become 0 and nobody gains;</span></li>
 <li>lit by <strong>exactly one</strong> player: that player's streak grows by 1 (max 4), then the player gains <var>value x</var> the new streak; every other player's streak drops by 1 (min 0);</li>
 <li>lit by <strong>two or more</strong> players: nobody gains; those players keep their streak; the others' drop by 1;</li>
 <li>lit by <strong>nobody</strong>: every streak drops by 1 (min 0).</li>
@@ -64,45 +68,42 @@
 <p>A crystal kept alone pays x1, x2, x3, then x4 every turn.</p>
 <img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/contested.png" alt="A crystal lit by one beam scores; lit by two beams it scores nothing" style="width: 100%; max-width: 400px; display: block; margin: 10px auto;" />
 <img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/streak.png" alt="Streak badges x1 to x4 under a crystal" style="width: 100%; max-width: 400px; display: block; margin: 10px auto;" />
-<h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Mirror economy</h3>
+<h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Build time and wear</h3>
 <ul>
-<li><strong>Supply.</strong> Each player starts with 4 mirrors and gets 1 more at the start of turns 4, 8, 12 ... (the input of that turn already counts it). A player holds at most 6 mirrors in hand; extra mirrors are lost. A shattered mirror does not come back to any hand.</li>
-<li><strong>Build time.</strong> A mirror placed on turn <var>t</var> is <strong>pending</strong> on turn <var>t+1</var> and bends beams from turn <var>t+2</var>. While pending, beams go through its cell and nobody can place there or turn it; the other players read its type as <const>-1</const> (the player who placed it reads the real type). A pending mirror shows <var>lock -1</var> and <var>life 20</var>.</li>
-<li><strong>Wear.</strong> <var>life</var> drops by 1 at the end of each turn on which the mirror bends beams, except a turn on which it is turned; at 0 the mirror shatters and its cell becomes empty. Timeline of a mirror placed on turn <var>t</var> and never turned: input <var>t+1</var> shows it pending with <var>life 20</var>; inputs <var>t+2</var> to <var>t+21</var> show <var>life</var> 20 to 1 and it bends beams on those turns; it shatters at the end of turn <var>t+21</var>; input <var>t+22</var> lists it once with <var>life 0</var>. Mirrors on the reef at the start show <var>life 20</var> on turn 1.</li>
+<li><strong>Build time.</strong> A mirror placed on turn <var>t</var> is <strong>pending</strong> on turn <var>t+1</var> and bends beams from turn <var>t+2</var>. While pending, beams go through its cell and nobody can place there or turn it. Its type is shown to every player. A pending mirror shows <var>lock -1</var> and <var>life 20</var>.</li>
+<li><strong>Wear.</strong> <var>life</var> drops by 1 at the end of each turn on which the mirror bends beams; at 0 the mirror shatters and its cell becomes empty. Timeline of a mirror placed on turn <var>t</var> and never turned: input <var>t+1</var> shows it pending with <var>life 20</var>; inputs <var>t+2</var> to <var>t+21</var> show <var>life</var> 20 to 1 and it bends beams on those turns; it shatters at the end of turn <var>t+21</var>; input <var>t+22</var> lists it once with <var>life 0</var>. Mirrors on the reef at the start show <var>life 20</var> on turn 1.</li>
 </ul>
 <img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/build.png" alt="Build time of a mirror" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Placed on turn t, pending on turn t+1, bends beams from turn t+2.</div>
 <img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/wear.png" alt="Wear of a mirror" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">An active mirror bends beams for 20 turns, then shatters.</div>
 <div style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">
-<h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Tides, values and strikes</h3>
+<h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Values and strikes</h3>
 <div style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">
 <ul>
-<li><strong>Tides.</strong> Each crystal is awake 30 turns out of every 45, then asleep 15 turns. The input gives, for each crystal, whether it is awake and in how many turns this changes. An asleep crystal gives nothing and resets the streaks on it.</li>
 <li><strong>Values.</strong> Crystals are worth 1, 2 or 3.</li>
-<li><strong>Strike.</strong> Each turn, a beam that ends on another player's lamp gives 2 points to the player who fired it. Each such beam counts. The struck player loses nothing. An eliminated player's lamp is a rock and gives nothing.</li>
+<li><strong>Strike.</strong> Each turn, a beam that ends on another player's lamp gives 4 points to the player who fired it. Each such beam counts. The struck player loses nothing. An eliminated player's lamp is a rock and gives nothing.</li>
 </ul>
 </div>
 <div style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">
-<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/tides.png" alt="Crystal values and tides" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Values 1 to 3 by size; a crystal is awake 30 turns, then asleep 15 and pays nothing.</div>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/values.png" alt="Crystal values from 1 to 3" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Crystals worth 1, 2 or 3, by size.</div>
 </div>
 <div style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">
-<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/strike.png" alt="Strike on a rival lamp" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">A beam that ends on another player's lamp: 2 points each turn.</div>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/strike.png" alt="Strike on a rival lamp" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">A beam that ends on another player's lamp: 4 points each turn.</div>
 </div>
 </div>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Order of a turn</h3>
 <ul>
-<li>Supply (before the input is sent).</li>
+<li>Supply (before the input is sent), on turns 10, 20, 30 ...</li>
 <li>All placements, then all turns.</li>
 <li>Every lamp fires.</li>
 <li>Scoring.</li>
 <li>Locks drop by 1, except those set on this turn.</li>
 <li>Pending mirrors become active, active mirrors wear.</li>
 </ul>
-<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/order.png" alt="Order of a turn" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Supply, placements, turns, lamps fire, scoring, locks drop, mirrors activate and wear.</div>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/order.png" alt="Order of a turn" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Supply, placements, turns, every lamp fires, scoring, locks drop, mirrors activate and wear.</div>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">End of the game</h3>
-<p>The game ends after 150 turns, or earlier when:</p>
+<p>The game lasts 150 turns in every league, or ends earlier when:</p>
 <ul>
 <li>fewer than two players remain;</li>
-<li>the ranking can no longer change: every two remaining players' scores differ by more than the most points one player can still score (turns left after this one x <span style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">(4 x the total value of all crystals + 2)</span>);</li>
 <li>every remaining player has done nothing (<action>WAIT</action>, an impossible action, or a placement that failed on a shared cell) for 20 turns in a row: the referee then plays the remaining turns itself with every player waiting (lamps still fire and score each turn), and the final scores are the scores after the last turn.</li>
 </ul>
 <p>Equal scores share the rank. An eliminated player gets a score of -1. Its lamp stops firing and acts as a rock; its yard stays protected; its mirrors stay on the reef. The input shows it with <const>-1</const> mirrors.</p>
@@ -125,22 +126,22 @@
 <p><span class="statement-lineno">Line 2: </span>an integer <var>size</var>: the width and height of the reef.</p>
 </div></div>
 <div class="blk"><div class="title">Input for one game turn</div><div class="text">
-<p>Turns are numbered from <const>1</const>; the input is not numbered.</p>
+<p>The same fields are sent in every league. A field that the current league does not use has a fixed value, stated below. Turns are numbered from <const>1</const>; the input is not numbered.</p>
 <p><span class="statement-lineno">Line 1: </span>five space-separated integers <var>myScore</var> <var>mirrors0</var> <var>mirrors1</var> <var>mirrors2</var> <var>mirrors3</var>: the score of player <const>0</const>, then the mirrors each player id can still place (<const>-1</const> for an eliminated or missing player).</p>
 <p><span class="statement-lineno">Line 2: </span>an integer <var>mirrorCount</var>: the number of mirrors on the reef.</p>
 <p><span class="statement-lineno">Next <var>mirrorCount</var> lines: </span>five space-separated integers <var>x</var> <var>y</var> <var>mirrorType</var> <var>lock</var> <var>life</var>. Every listed mirror, pending or active, fills its cell: no mirror can be placed there, except a mirror with <var>life</var> <const>0</const>.</p>
 <ul>
 <li><var>x</var> <var>y</var>: the mirror's cell.</li>
-<li><var>mirrorType</var>: <const>0</const> (<const>/</const>) or <const>1</const> (<const>\</const>); <const>-1</const> for another player's pending mirror.</li>
-<li><var>lock</var>: turns before it can be turned; <const>0</const> when it can be turned; <const>-1</const> while it is pending (it does not bend beams yet).</li>
-<li><var>life</var>: active turns left before it shatters; <const>0</const> for a mirror that shattered at the end of the last turn (listed once; its cell is empty).</li>
+<li><var>mirrorType</var>: <const>0</const> (<const>/</const>) or <const>1</const> (<const>\</const>). The type is always real, pending or not.</li>
+<li><var>lock</var>: turns before it can be turned; <const>0</const> when it can be turned. It is always <const>0</const> in Wood 2 (no <action>TURN</action> there). <const>-1</const> while it is pending, when it does not bend beams yet.</li>
+<li><var>life</var>: <const>-1</const> in the Wood leagues (mirrors never wear there). Active turns left before it shatters, and <const>0</const> for a mirror that shattered at the end of the last turn (listed once; its cell is empty).</li>
 </ul>
 <p><span class="statement-lineno">Next line: </span>an integer <var>crystalCount</var>: the number of crystals.</p>
 <p><span class="statement-lineno">Next <var>crystalCount</var> lines, one per crystal in reef order (by <var>y</var>, then <var>x</var>): </span>three space-separated integers <var>tide</var> <var>litBy</var> <var>myStreak</var>:</p>
 <ul>
-<li><var>tide</var>: <span style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">the state on this turn: <var>k</var> &gt; 0 means awake on this turn and the next <var>k</var> - 1 turns; -<var>k</var> means asleep on this turn and the next <var>k</var> - 1 turns; never <const>0</const> in this league (<var>tide</var> <const>1</const> is followed by <const>-15</const>, and <const>-1</const> by <const>30</const>)</span>.</li>
-<li><var>litBy</var>: the id of the player who lit it alone on the last turn; <const>-1</const> nobody (and on turn <const>1</const>); <const>-2</const> several players<span style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">; it also reports beams on an asleep crystal</span>.</li>
-<li><var>myStreak</var>: player <const>0</const>'s streak on it, <const>0</const> to <const>4</const>.</li>
+<li><var>tide</var>: always <const>0</const> in every league (crystals are always awake); the field stays so that the input is the same in every league.</li>
+<li><var>litBy</var>: the id of the player who lit it alone on the last turn; <const>-1</const> nobody (and on turn <const>1</const>); <const>-2</const> several players.</li>
+<li><var>myStreak</var>: player <const>0</const>'s streak on it, <const>0</const> to <const>4</const>. Ignore it until Wood 1.</li>
 </ul>
 </div></div>
 <div class="blk"><div class="title">Output for one game turn</div><div class="text">

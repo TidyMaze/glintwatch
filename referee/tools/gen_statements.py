@@ -180,9 +180,12 @@ DIRECTIONS = "`E`, `S`, `W` or `N`"
 IMAGE_BASE = "https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement"
 
 
+LITERALS = {"hello"}  # reviewer 5DN1L: the example message is a constant, not a variable
+
+
 def _token(t):
     e = html.escape(t, quote=False)
-    return "<const>%s</const>" % e if re.fullmatch(r"-?\d+", t) or t in SYMBOLS else "<var>%s</var>" % e
+    return "<const>%s</const>" % e if re.fullmatch(r"-?\d+", t) or t in SYMBOLS or t in LITERALS else "<var>%s</var>" % e
 
 
 def _code(c):
@@ -214,6 +217,9 @@ def _inline_html(s):
 
 def _io_line(text):
     """'Line 1: ...' / 'Next ... lines: ...' -> statement-lineno prefix (moderator point 5)."""
+    one = re.match(r"^(One line:)\s+(.*)$", text, re.S)  # reviewer 5DN1L: <span class="statement-lineno">One line:</span>
+    if one:
+        return '<p><span class="statement-lineno">%s</span> %s</p>' % (one.group(1), _inline_html(one.group(2)))
     m = re.match(r"^((?:Line \d+|Next [^:]*?):\s)(.*)$", text, re.S)
     if not m:
         return "<p>%s</p>" % _inline_html(text)

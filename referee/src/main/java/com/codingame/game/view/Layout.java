@@ -18,13 +18,13 @@ public final class Layout {
     public static final int PANEL_W = 380, PANEL_H = 310;
     /** UX 14: every canvas text is at least 36 px; turn box and legend sit at y 390. */
     public static final int MIN_FONT = 36, MID_BOX_Y = 390;
-    /** UX 16: the board box (contested, awake) replaces the turn box. */
+    /** UX 16: the board box (contested count) replaces the turn box. */
     public static final int BOARD_BOX_Y = 470;
     /** UX 14.3 option B: the streak chip shows one digit at 36 px, chip 36 x 40 centred on the cell corner. */
     public static final int CHIP_W = 36, CHIP_H = 40;
     /** UX 14 fix: coordinate labels keep 6 px from the board; the strike float is bold 40 and rises 30 px. */
     public static final int COORD_GAP = 6, STRIKE_FONT = 40, STRIKE_RISE = 30;
-    public static final String[] LEGEND_WORDS = {"pays", "0 pts", "asleep", "pending", "locked", "yard"};
+    public static final String[] LEGEND_WORDS = {"pays", "0 pts", "pending", "locked", "yard"};
     /** Beam core pattern per player id (UX 2) and emblem sprite per player id (STYLE). */
     public static final String[] BEAM_PATTERN = {"beam_solid.png", "beam_dash.png", "beam_dots.png", "beam_double.png"};
     /** Beam tiles with the glow baked in (32x48: glow band, pattern rows 16-31): one TilingSprite per segment. */
@@ -99,11 +99,6 @@ public final class Layout {
         return every - turnsPlayed % every;
     }
 
-    /** Panel hand line (UX 12): "3 /6  +1 in 2"; no countdown without supply or with a full hand. */
-    public static String handText(int hand, int max, int every, int turnsToSupply) {
-        return every <= 0 || hand >= max ? hand + " /" + max : hand + " /" + max + "  +1 in " + turnsToSupply;
-    }
-
     public double crystalSize(int value) {
         return (0.28 + 0.12 * value) * cell;
     }
@@ -126,17 +121,19 @@ public final class Layout {
         return 1.15 * chipFont();
     }
 
-    /** "↓k" sleeps in k turns, "↑k" wakes in k turns, shown only when k <= 3; else "". */
-    public static String tideTimer(int turn, int phase, int cycle, int awakeTurns) {
-        int m = (turn + phase) % cycle;
-        boolean awake = m < awakeTurns;
-        int k = awake ? awakeTurns - m : cycle - m;
-        return k > 3 ? "" : (awake ? "\u2193" : "\u2191") + k;
+    /** Lock ring slots: one arc per lock turn (V6 lock 2 gives two halves: a full ring at lock 2). */
+    public static int arcSlots(int lock) {
+        return lock;
     }
 
-    /** Lit lock arcs: none at lock 0, at most 5. */
+    /** Angle between two lock arcs, in radians (2 pi / slots). */
+    public static double arcStep(int slots) {
+        return 2 * Math.PI / slots;
+    }
+
+    /** Lit lock arcs: none at lock 0, one per lock turn left (never more than the slots, since lock <= cfg.lock). */
     public static int litArcs(int lock) {
-        return Math.min(5, Math.max(0, lock));
+        return Math.max(0, lock);
     }
 
     /** {length, rotation in radians} of a beam segment from a to b. */
@@ -196,11 +193,6 @@ public final class Layout {
         return new double[] {x0 + (x + 1.0) * cell, y0 + (y + 1.0) * cell};
     }
 
-    /** The tide rule shown in a crystal's tooltip (UX 14.3 B: the timer chip moves to the tooltip). */
-    public static String tideRule(int phase, int cycle, int awake) {
-        return "awake when (turn + " + phase + ") % " + cycle + " < " + awake;
-    }
-
     /** Panel last-action line (UX 1.1). */
     public static String actionLabel(Command c, String invalid) {
         if (c == null) return "";
@@ -216,7 +208,12 @@ public final class Layout {
 
     /** UX 17: an awake unlit crystal whose best streak (2+, the chip) is fading shows its owner: crystal_decay{owner}. */
     public static String crystalImage(int litBy, boolean awake, int value, int bestId, int bestStreak) {
-        String state = !awake ? "dormant" : litBy == -2 ? "contested" : litBy >= 0 ? "lit" + litBy
+        return crystalImage(litBy, awake, value, bestId, bestStreak, true);
+    }
+
+    /** UX 18: without the contested rule (league 1) a crystal lit by 2+ beams pays every lighter: crystal_shared. */
+    public static String crystalImage(int litBy, boolean awake, int value, int bestId, int bestStreak, boolean contestedRule) {
+        String state = !awake ? "dormant" : litBy == -2 ? (contestedRule ? "contested" : "shared") : litBy >= 0 ? "lit" + litBy
             : bestId >= 0 && bestStreak >= 2 ? "decay" + bestId : "unlit";
         return "crystal_" + state + "_v" + value + ".png";
     }
@@ -234,9 +231,9 @@ public final class Layout {
         return (top ? "coords_top_N" : "coords_left_N") + n + ".png";
     }
 
-    /** Panel per player id; the Wood one (no supply) has no supply icon. */
-    public static String panelImage(int id, boolean supply) {
-        return "panel_" + id + (supply ? "" : "_wood") + ".png";
+    /** Panel per player id: every league shows the mirror supply, so every league uses the panel with the supply icon. */
+    public static String panelImage(int id) {
+        return "panel_" + id + ".png";
     }
 
     /** UX 15.2 chip "x,y,digit,colour,dashed,dimmed": colour 4 = white (contested); a fading streak is dashed and dimmed. */
@@ -260,11 +257,27 @@ public final class Layout {
     }
 
     /**
-     * UX 14 fix 2: "+2" float position for shooter id on a lamp firing d (d points into the board): one cell in from
+     * UX 14 fix 2: "+N" float position for shooter id on a lamp firing d (d points into the board): one cell in from
      * the lamp, shooters spread 20 px apart across d, and at rise = 1 it has moved STRIKE_RISE further in.
      */
     public double[] strikeFloat(double[] lamp, Dir d, int id, double rise) {
         double side = (id - 1.5) * 20, in = cell + rise * STRIKE_RISE;
         return new double[] {lamp[0] + d.dx * in - d.dy * side, lamp[1] + d.dy * in + d.dx * side};
+    }
+
+    /** UX 18: league 1 has "shared" instead of "0 pts" in the legend and the shared icon in the board box. */
+    public static String legendImage(boolean contestedRule) {
+        return contestedRule ? "legend.png" : "legend_l1.png";
+    }
+
+    public static String boardBoxImage(boolean contestedRule) {
+        return contestedRule ? "boardbox.png" : "boardbox_l1.png";
+    }
+
+    /** Panel "lit" count: crystals on the player's beam lit alone; without the contested rule (league 1) shared ones too. */
+    public static int litCount(List<Integer> lit, int[] litBy, int id, boolean contestedRule) {
+        int k = 0;
+        for (int p : lit) if (litBy[p] == id || !contestedRule && litBy[p] == -2) k++;
+        return k;
     }
 }

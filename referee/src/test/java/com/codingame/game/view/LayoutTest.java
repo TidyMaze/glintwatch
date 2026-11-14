@@ -127,24 +127,6 @@ class LayoutSpritesTest {
     }
 
     @org.junit.jupiter.api.Test
-    void tideTimerShowsOnlyChangesWithinThreeTurns() {
-        // awake when (t + phase) % 45 < 30
-        org.junit.jupiter.api.Assertions.assertEquals("↓3", Layout.tideTimer(27, 0, 45, 30));
-        org.junit.jupiter.api.Assertions.assertEquals("↓1", Layout.tideTimer(29, 0, 45, 30));
-        org.junit.jupiter.api.Assertions.assertEquals("", Layout.tideTimer(26, 0, 45, 30));
-        org.junit.jupiter.api.Assertions.assertEquals("↑2", Layout.tideTimer(43, 0, 45, 30));
-        org.junit.jupiter.api.Assertions.assertEquals("", Layout.tideTimer(31, 0, 45, 30));
-        org.junit.jupiter.api.Assertions.assertEquals("↑1", Layout.tideTimer(40, 4, 45, 30));
-    }
-
-    @org.junit.jupiter.api.Test
-    void lockArcsLitOnlyForLocksOneToFive() {
-        org.junit.jupiter.api.Assertions.assertEquals(0, Layout.litArcs(0));
-        org.junit.jupiter.api.Assertions.assertEquals(3, Layout.litArcs(3));
-        org.junit.jupiter.api.Assertions.assertEquals(5, Layout.litArcs(7));
-    }
-
-    @org.junit.jupiter.api.Test
     void beamPatternPerPlayerAndSegmentGeometry() {
         org.junit.jupiter.api.Assertions.assertEquals("beam_solid.png", Layout.BEAM_PATTERN[0]);
         org.junit.jupiter.api.Assertions.assertEquals("beam_double.png", Layout.BEAM_PATTERN[3]);
@@ -195,15 +177,6 @@ class LayoutLaneTest {
         org.junit.jupiter.api.Assertions.assertEquals(l.centre(6, 3)[0] - 38 + l.laneOffset(2), pts.get(1)[0], 1e-9);
     }
 
-    @org.junit.jupiter.api.Test
-    void handTextShowsTheNextSupply() {
-        org.junit.jupiter.api.Assertions.assertEquals("3 /6  +1 in 2", Layout.handText(3, 6, 4, 2));
-        org.junit.jupiter.api.Assertions.assertEquals("6 /6", Layout.handText(6, 6, 4, 0));
-        org.junit.jupiter.api.Assertions.assertEquals("7 /12", Layout.handText(7, 12, 0, 5));
-        org.junit.jupiter.api.Assertions.assertEquals(4, Layout.turnsToSupply(4, 4));
-        org.junit.jupiter.api.Assertions.assertEquals(1, Layout.turnsToSupply(7, 4));
-        org.junit.jupiter.api.Assertions.assertEquals(4, Layout.turnsToSupply(8, 4));
-    }
 }
 
 /** UX.md 14 (owner order): canvas text >= 36 px, icons instead of words, chips option B. */
@@ -263,13 +236,8 @@ class LayoutUx14Test {
     }
 
     @org.junit.jupiter.api.Test
-    void tideRuleForTheTooltip() {
-        org.junit.jupiter.api.Assertions.assertEquals("awake when (turn + 7) % 45 < 30", Layout.tideRule(7, 45, 30));
-    }
-
-    @org.junit.jupiter.api.Test
     void legendIsSixIconWords() {
-        org.junit.jupiter.api.Assertions.assertArrayEquals(new String[] {"pays", "0 pts", "asleep", "pending", "locked", "yard"}, Layout.LEGEND_WORDS);
+        org.junit.jupiter.api.Assertions.assertArrayEquals(new String[] {"pays", "0 pts", "pending", "locked", "yard"}, Layout.LEGEND_WORDS);
     }
 }
 
@@ -330,8 +298,8 @@ class LayoutGlowTilesTest {
         assertEquals("yard_v.png", Layout.yardImage(3, 5));
         assertEquals("coords_top_N17.png", Layout.coordsImage(true, 17));
         assertEquals("coords_left_N13.png", Layout.coordsImage(false, 13));
-        assertEquals("panel_1_wood.png", Layout.panelImage(1, false));
-        assertEquals("panel_3.png", Layout.panelImage(3, true));
+        assertEquals("panel_1.png", Layout.panelImage(1));
+        assertEquals("panel_3.png", Layout.panelImage(3));
     }
 
     /** UX 15.2 chip record: x, y, digit, colour (0-3 player, 4 white), dashed, dimmed; empty below a streak of 2. */
@@ -347,7 +315,7 @@ class LayoutGlowTilesTest {
     /** UX 15.2 mirror record: x, y, type, pending, toucher, wear tier, lit lock arcs. */
     @Test
     void mirrorRecordPacksTheMirrorState() {
-        assertEquals("1,2,0,1,-1,0,5", Layout.mirrorRecord(1, 2, 0, true, -1, -1, 9));
+        assertEquals("1,2,0,1,-1,0,2", Layout.mirrorRecord(1, 2, 0, true, -1, -1, 2));
         assertEquals("1,2,1,0,3,2,0", Layout.mirrorRecord(1, 2, 1, false, 3, 2, 0));
     }
 
@@ -360,7 +328,7 @@ class LayoutGlowTilesTest {
     /** Every image the viewer and the board module can name is shipped, and nothing else (UX 14.4 asset budget). */
     @Test
     void shippedAssetsAreExactlyTheImagesTheViewerNames() throws Exception {
-        java.util.Set<String> named = new java.util.TreeSet<>(List.of("background.jpg", "floor_checker.png", "rock.png", "legend.png",
+        java.util.Set<String> named = new java.util.TreeSet<>(List.of("background.jpg", "floor_checker.png", "rock.png",
             "open_yard.png", "logo.png", "mirror_base.png", "mirror_bar.png", "mirror_crack_1.png", "mirror_crack_2.png", "mirror_pending.png",
             "lock_arc.png", "streak_badge.png", "streak_badge_dashed.png", "icon_place.png", "icon_turn.png", "icon_wait.png", "icon_refused.png"));
         for (String b : Layout.BEAM_GLOW_PATTERN) named.add(b);
@@ -375,8 +343,12 @@ class LayoutGlowTilesTest {
                 named.add(Layout.lampImage(id, d, false));
                 named.add(Layout.lampImage(id, d, true));
             }
-        for (int id = 0; id < 4; id++) for (boolean s : new boolean[] {true, false}) named.add(Layout.panelImage(id, s));
-        named.add("boardbox.png");
+        for (int id = 0; id < 4; id++) named.add(Layout.panelImage(id));
+        for (boolean c : new boolean[] {true, false}) {
+            named.add(Layout.boardBoxImage(c));
+            named.add(Layout.legendImage(c));
+        }
+        for (int v = 1; v <= 3; v++) named.add(Layout.crystalImage(-2, true, v, -1, 0, false));
         for (int n = 13; n <= 19; n += 2) for (boolean top : new boolean[] {true, false}) named.add(Layout.coordsImage(top, n));
         named.add(Layout.yardImage(5, 3));
         named.add(Layout.yardImage(3, 5));
@@ -390,7 +362,7 @@ class LayoutGlowTilesTest {
         while (m.find()) assertTrue(shipped.contains(m.group(1)), m.group(1));
     }
 
-    /** UX 14 fix 2: the "+2" float starts one cell inside the board from the struck lamp, rises further in; shooters side by side. */
+    /** UX 14 fix 2: the "+N" float starts one cell inside the board from the struck lamp, rises further in; shooters side by side. */
     @Test
     void strikeFloatStaysInsideTheBoard() {
         Layout l = new Layout(19); // cell 52
@@ -399,5 +371,56 @@ class LayoutGlowTilesTest {
         assertArrayEquals(new double[] {100 - 30, 50 + 52 + Layout.STRIKE_RISE}, l.strikeFloat(lamp, Dir.S, 3, 1), 1e-9);
         assertArrayEquals(new double[] {100 - 52, 50 + 10}, l.strikeFloat(lamp, Dir.W, 1, 0), 1e-9);
         assertArrayEquals(new double[] {100 + 52, 50 + 10}, l.strikeFloat(lamp, Dir.E, 2, 0), 1e-9);
+    }
+
+    /** UX 18: in league 1 (no contested rule) a crystal lit by 2+ beams pays every lighter: "shared", never "0". */
+    @Test
+    void sharedCrystalWithoutTheContestedRule() {
+        assertEquals("crystal_shared_v3.png", Layout.crystalImage(-2, true, 3, -1, 0, false));
+        assertEquals("crystal_contested_v3.png", Layout.crystalImage(-2, true, 3, -1, 0, true));
+        assertEquals("crystal_lit2_v1.png", Layout.crystalImage(2, true, 1, -1, 0, false));
+        assertEquals("legend_l1.png", Layout.legendImage(false));
+        assertEquals("legend.png", Layout.legendImage(true));
+        assertEquals("boardbox_l1.png", Layout.boardBoxImage(false));
+        assertEquals("boardbox.png", Layout.boardBoxImage(true));
+    }
+
+    /** UX 18: league 1 pays shared crystals, so a panel's lit count includes them; elsewhere only crystals lit alone count. */
+    @Test
+    void litCountIncludesSharedCrystalsOnlyWithoutTheContestedRule() {
+        int[] litBy = {0, -2, 1, -2};
+        List<Integer> lit = List.of(0, 1, 2, 3); // 2 is lit by player 1 alone: never counted for player 0
+        assertEquals(1, Layout.litCount(lit, litBy, 0, true));
+        assertEquals(3, Layout.litCount(lit, litBy, 0, false));
+    }
+
+    @org.junit.jupiter.api.Test
+    void lockRingHasOneArcPerLockTurnAndNeverShowsMore() {
+        int slots = Layout.arcSlots(Config.bronze().lock);
+        assertEquals(2, slots, "V6 lock 2: two arcs");
+        assertEquals(Math.PI, Layout.arcStep(slots), 1e-9, "two halves, a full ring at lock 2");
+        assertEquals(0, Layout.litArcs(0));
+        assertEquals(1, Layout.litArcs(1));
+        assertEquals(2, Layout.litArcs(2));
+        for (int lock = 0; lock <= Config.bronze().lock; lock++) assertTrue(Layout.litArcs(lock) <= slots);
+    }
+
+    @org.junit.jupiter.api.Test
+    void noMirrorInAGameShowsMoreLitArcsThanTheLock() throws Exception {
+        for (int league = 2; league <= 4; league++) {
+            Config cfg = Config.forLeague(league);
+            Game g = Game.fromSeed(5L, 4, cfg);
+            for (int t = 0; t < 30 && !g.isOver(); t++) {
+                g.playTurn(new Command[4]);
+                for (int p = 0; p < g.board.n * g.board.n; p++)
+                    assertTrue(Layout.litArcs(g.board.mirrorLock[p]) <= Layout.arcSlots(cfg.lock), "league " + league + " cell " + p);
+            }
+        }
+    }
+
+    @org.junit.jupiter.api.Test
+    void supplyCountdownToTheNextTenthTurn() {
+        assertEquals(6, Layout.turnsToSupply(4, 10));
+        assertEquals(10, Layout.turnsToSupply(10, 10));
     }
 }

@@ -33,14 +33,13 @@ public final class Viewer {
     private final Game game;
     private final Layout l;
     private final int n;
-    private final boolean supply;
 
     private final Map<Integer, CrystalView> crystals = new TreeMap<>();
     private final PanelView[] panels;
     private final Sprite[] lamps = new Sprite[4];
-    /** UX 14 fix: "+2" strike float, one pooled Text per player (bold 40, shooter colour, rises at t 0.3-0.6). */
+    /** UX 14 fix: "+N" strike float (N = cfg.strikeBonus, 4 in the top league), one pooled Text per player (bold 40, shooter colour, rises at t 0.3-0.6). */
     private final Text[] strikeFloat = new Text[4];
-    private Text contestedText, awakeText;
+    private Text contestedText;
 
     public Viewer(GraphicEntityModule g, TooltipModule tips, ToggleModule toggles, BoardModule board, MultiplayerGameManager<Player> gm,
         Game game) {
@@ -52,7 +51,6 @@ public final class Viewer {
         this.game = game;
         this.n = game.board.n;
         this.l = new Layout(n);
-        this.supply = game.cfg.supplyEvery > 0;
         panels = new PanelView[game.playerCount];
     }
 
@@ -115,7 +113,7 @@ public final class Viewer {
             "coords", true);
         toggles.displayOnToggleState(g.createSprite().setImage(Layout.coordsImage(false, n)).setX(l.x0 - 48).setY(l.y0).setZIndex(100),
             "coords", true);
-        g.createSprite().setImage("legend.png").setX(1500).setY(Layout.MID_BOX_Y).setZIndex(90);
+        g.createSprite().setImage(Layout.legendImage(game.cfg.contested)).setX(1500).setY(Layout.MID_BOX_Y).setZIndex(90);
         Board b = game.board;
         for (int x = 0; x < n; x++)
             for (int y = 0; y < n; y++) {
@@ -129,7 +127,8 @@ public final class Viewer {
         // UX 15.2: the board module draws into these three GEM groups, so beams stay under crystals and chips over mirrors
         int beams = g.createGroup().setZIndex(41).getId(), mirrors = g.createGroup().setZIndex(60).getId(),
             chips = g.createGroup().setZIndex(62).getId();
-        board.setup(new int[] {n, l.cell, l.x0, l.y0, l.beamWidth, game.playerCount}, new int[] {beams, mirrors, chips}, mirrorsRecord());
+        board.setup(new int[] {n, l.cell, l.x0, l.y0, l.beamWidth, game.playerCount, Layout.arcSlots(game.cfg.lock)},
+            new int[] {beams, mirrors, chips}, mirrorsRecord());
         for (int id = 0; id < game.playerCount; id++) yard(id);
         for (int id = 0; id < game.playerCount; id++)
             strikeFloat[id] = text("+" + game.cfg.strikeBonus, Layout.STRIKE_FONT, Layout.COLOUR[id]).setAnchor(0.5)
@@ -173,12 +172,11 @@ public final class Viewer {
         tip(lamps[id], name(id) + " lamp (" + Geometry.x(p, n) + ", " + Geometry.y(p, n) + "), fires " + d);
     }
 
-    /** UX 16 board box (40, 470) 380 x 140: contested count and awake/total, bold 36; the CG player shows the turn. */
+    /** UX 16 board box (40, 470) 380 x 140: contested count, bold 36; the CG player shows the turn. */
     private void boardBox() {
         int y = Layout.BOARD_BOX_Y;
-        g.createSprite().setImage("boardbox.png").setX(40).setY(y).setZIndex(90);
+        g.createSprite().setImage(Layout.boardBoxImage(game.cfg.contested)).setX(40).setY(y).setZIndex(90);
         contestedText = text("", Layout.MIN_FONT, Layout.TEXT).setX(120).setY(y + 28).setFontWeight(Text.FontWeight.BOLD).setZIndex(91);
-        awakeText = text("", Layout.MIN_FONT, Layout.TEXT).setX(120).setY(y + 84).setFontWeight(Text.FontWeight.BOLD).setZIndex(91);
     }
 
     /** Phases (UX 3): t 0 actions, t 0.3 beams and crystals snap, t 0.6 locks and wear (the board module follows them). */
@@ -243,14 +241,9 @@ public final class Viewer {
     }
 
     private void refreshBoardBox() {
-        int t = game.turn;
-        int contested = 0, awake = 0;
-        for (int p : crystals.keySet()) {
-            if (game.litBy[p] == -2) contested++;
-            if (game.awake(p, Math.max(1, t))) awake++;
-        }
+        int contested = 0;
+        for (int p : crystals.keySet()) if (game.litBy[p] == -2) contested++;
         textOf(contestedText, String.valueOf(contested));
-        textOf(awakeText, awake + "/" + crystals.size());
     }
 
     /** UX 15: one sprite per crystal; glow, emblem, ring and "0" badge are baked into its image. */
@@ -265,13 +258,13 @@ public final class Viewer {
             body = spriteAt(currentImage(), c[0], c[1], size, size).setZIndex(51);
             changed(body, "i", currentImage());
             int x = Geometry.x(p, n), y = Geometry.y(p, n), v = game.board.value[p];
-            tip(body, "(" + x + "," + y + ") " + v + " pt"
-                + (game.cfg.tides ? "\n" + Layout.tideRule(game.board.phase[p], game.cfg.tideCycle, game.cfg.tideAwake) : ""));
+            tip(body, "(" + x + "," + y + ") " + v + " pt");
         }
 
         String currentImage() {
             int[] best = best();
-            return Layout.crystalImage(game.litBy[p], game.awake(p, Math.max(1, game.turn)), game.board.value[p], best[1], best[0]);
+            return Layout.crystalImage(game.litBy[p], true, game.board.value[p], best[1], best[0],
+                game.cfg.contested);
         }
 
         /** {best streak, its player} on this crystal ({0, -1} when nobody has one). */
@@ -311,7 +304,7 @@ public final class Viewer {
             List<Entity<?>> parts = new ArrayList<>();
             // the avatar sits under the panel image, which has a hole at its box and the emblem badge baked on top
             parts.add(g.createSprite().setImage(pl.getAvatarToken()).setX(28).setY(24).setBaseWidth(112).setBaseHeight(112));
-            parts.add(g.createSprite().setImage(Layout.panelImage(id, supply)));
+            parts.add(g.createSprite().setImage(Layout.panelImage(id)));
             parts.add(text(pl.getNicknameToken(), f, Layout.TEXT).setX(156).setY(24).setFontWeight(Text.FontWeight.BOLD).setMaxWidth(200));
             score = text("0", 72, c).setX(172).setY(70).setFontWeight(Text.FontWeight.BOLD);
             hand = text("", f, Layout.TEXT).setX(66).setY(158).setFontWeight(Text.FontWeight.BOLD);
@@ -328,9 +321,9 @@ public final class Viewer {
         }
 
         void refreshHand() {
-            set(hand, game.mirrorsLeft[id] + "/" + game.cfg.handMax);
+            set(hand, String.valueOf(game.mirrorsLeft[id]));
             int every = game.cfg.supplyEvery;
-            set(supplyText, every > 0 && game.mirrorsLeft[id] < game.cfg.handMax ? String.valueOf(Layout.turnsToSupply(game.turn, every)) : "");
+            set(supplyText, every > 0 ? "+1 in " + Layout.turnsToSupply(game.turn, every) : "");
         }
 
         void set(Text t, String v) {
@@ -343,9 +336,7 @@ public final class Viewer {
         void update(TurnReport r) {
             set(score, String.valueOf(game.score[id]));
             refreshHand();
-            int alone = 0;
-            if (r.beams[id] != null) for (int p : r.beams[id].lit) if (game.litBy[p] == id) alone++;
-            set(lit, String.valueOf(alone));
+            set(lit, String.valueOf(r.beams[id] == null ? 0 : Layout.litCount(r.beams[id].lit, game.litBy, id, game.cfg.contested)));
             if (!game.active[id]) {
                 if (!"ELIMINATED".equals(shown.get(action))) {
                     action.setFillColor(Layout.DANGER);

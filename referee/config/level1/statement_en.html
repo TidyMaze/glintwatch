@@ -29,6 +29,7 @@
 </ul>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Beams</h3>
 <p>After all actions of a turn, every lamp fires one beam. A lamp on the left edge fires east, on the top edge south, on the right edge west, on the bottom edge north. The beam moves cell by cell until it leaves the reef, reaches a rock or reaches a lamp. Beams never block each other. A beam cannot loop: it never enters the same cell twice in the same direction. A beam that crosses the same crystal twice lights it once. At the start, the straight line of each lamp holds no crystal, rock or mirror: a beam must be bent to score.</p>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/stops_wood.png" alt="Where a beam stops" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">A beam stops when it leaves the reef or reaches a lamp.</div>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Mirrors</h3>
 <p>A mirror turns a beam by 90 degrees:</p>
 <table>
@@ -38,10 +39,15 @@
 </table>
 <img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/mirrors.png" alt="How the two mirror types bend a beam" style="width: 100%; max-width: 400px; display: block; margin: 10px auto;" />
 <p>Mirrors belong to nobody: a mirror bends <strong>every</strong> beam that reaches it. Players cannot remove mirrors. Mirrors stay until the end.</p>
+<h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Mirror supply</h3>
+<ul>
+<li>Each player starts with 12 mirrors, in every league, and gets 1 more at the start of turns 10, 20, 30 ... (the input of that turn already counts it). There is no cap on the hand.</li>
+<li>A shattered mirror does not come back to any hand.</li>
+</ul>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Actions</h3>
 <p>Each turn, each player prints <strong>one</strong> action:</p>
 <ul>
-<li><action>PLACE</action> <var>x</var> <var>y</var> <var>type</var>: put one of the player's mirrors on an empty cell. Each player has 12 mirrors for the whole game.</li>
+<li><action>PLACE</action> <var>x</var> <var>y</var> <var>type</var>: put one of the player's mirrors on an empty cell. Mirrors come from the hand (see Mirror supply).</li>
 <li><action>WAIT</action>: do nothing.</li>
 </ul>
 <p>A message may follow the action, for example <action>PLACE</action> <const>5</const> <const>3</const> <const>1</const> <var>hello</var> (30 characters max).</p>
@@ -51,17 +57,19 @@
 <p><strong>Invalid lines</strong> eliminate the player: an empty line, an unknown keyword (keywords are in capitals), missing numbers, or a number that is not a whole number. Spaces at the start and end of the line are ignored. Every token after the numbers is the message; a message longer than 30 characters is cut, not refused.</p>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Scoring</h3>
 <p>Each turn, every player whose beam lights a crystal gains its value. Several beams on one crystal all score it.</p>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/shared_wood.png" alt="Scoring in this league" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">One beam on a crystal: +1. Two beams on one crystal: +1 to each.</div>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Order of a turn</h3>
 <ul>
+<li>Supply (before the input is sent), on turns 10, 20, 30 ...</li>
 <li>All placements.</li>
 <li>Every lamp fires.</li>
 <li>Scoring.</li>
 </ul>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/order_wood.png" alt="Order of a turn" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Supply, then placements, then every lamp fires, then scoring.</div>
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">End of the game</h3>
-<p>The game ends after 100 turns, or earlier when:</p>
+<p>The game lasts 150 turns in every league, or ends earlier when:</p>
 <ul>
 <li>fewer than two players remain;</li>
-<li>the ranking can no longer change: every two remaining players' scores differ by more than the most points one player can still score (turns left after this one x the total value of all crystals);</li>
 <li>every remaining player has done nothing (<action>WAIT</action>, an impossible action, or a placement that failed on a shared cell) for 20 turns in a row: the referee then plays the remaining turns itself with every player waiting (lamps still fire and score each turn), and the final scores are the scores after the last turn.</li>
 </ul>
 <p>Equal scores share the rank. An eliminated player gets a score of -1. Its lamp stops firing and acts as a rock; its yard stays protected; its mirrors stay on the reef. The input shows it with <const>-1</const> mirrors.</p>
@@ -84,22 +92,22 @@
 <p><span class="statement-lineno">Line 2: </span>an integer <var>size</var>: the width and height of the reef.</p>
 </div></div>
 <div class="blk"><div class="title">Input for one game turn</div><div class="text">
-<p>Turns are numbered from <const>1</const>; the input is not numbered.</p>
+<p>The same fields are sent in every league. A field that the current league does not use has a fixed value, stated below. Turns are numbered from <const>1</const>; the input is not numbered.</p>
 <p><span class="statement-lineno">Line 1: </span>five space-separated integers <var>myScore</var> <var>mirrors0</var> <var>mirrors1</var> <var>mirrors2</var> <var>mirrors3</var>: the score of player <const>0</const>, then the mirrors each player id can still place (<const>-1</const> for an eliminated or missing player).</p>
 <p><span class="statement-lineno">Line 2: </span>an integer <var>mirrorCount</var>: the number of mirrors on the reef.</p>
 <p><span class="statement-lineno">Next <var>mirrorCount</var> lines: </span>five space-separated integers <var>x</var> <var>y</var> <var>mirrorType</var> <var>lock</var> <var>life</var>. Every listed mirror fills its cell: no mirror can be placed there.</p>
 <ul>
 <li><var>x</var> <var>y</var>: the mirror's cell.</li>
-<li><var>mirrorType</var>: <const>0</const> (<const>/</const>) or <const>1</const> (<const>\</const>).</li>
-<li><var>lock</var>: turns before it can be turned; <const>0</const> when it can be turned (always <const>0</const> in this league).</li>
-<li><var>life</var>: active turns left before it shatters (always <const>-1</const> in this league: mirrors never wear).</li>
+<li><var>mirrorType</var>: <const>0</const> (<const>/</const>) or <const>1</const> (<const>\</const>). The type is always real, pending or not.</li>
+<li><var>lock</var>: turns before it can be turned; <const>0</const> when it can be turned. It is always <const>0</const> in Wood 2 (no <action>TURN</action> there).</li>
+<li><var>life</var>: <const>-1</const> in the Wood leagues (mirrors never wear there).</li>
 </ul>
 <p><span class="statement-lineno">Next line: </span>an integer <var>crystalCount</var>: the number of crystals.</p>
 <p><span class="statement-lineno">Next <var>crystalCount</var> lines, one per crystal in reef order (by <var>y</var>, then <var>x</var>): </span>three space-separated integers <var>tide</var> <var>litBy</var> <var>myStreak</var>:</p>
 <ul>
-<li><var>tide</var>: always <const>0</const> in this league (always awake).</li>
+<li><var>tide</var>: always <const>0</const> in every league (crystals are always awake); the field stays so that the input is the same in every league.</li>
 <li><var>litBy</var>: the id of the player who lit it alone on the last turn; <const>-1</const> nobody (and on turn <const>1</const>); <const>-2</const> several players.</li>
-<li><var>myStreak</var>: player <const>0</const>'s streak on it, <const>0</const> to <const>4</const> (always <const>0</const> in this league).</li>
+<li><var>myStreak</var>: player <const>0</const>'s streak on it, <const>0</const> to <const>4</const>. Ignore it until Wood 1.</li>
 </ul>
 </div></div>
 <div class="blk"><div class="title">Output for one game turn</div><div class="text">

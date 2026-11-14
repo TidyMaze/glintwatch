@@ -40,7 +40,6 @@ class TrackerTest {
         int killer = r.nextInt(3) == 0 ? r.nextInt(pc) : -1, killTurn = 5 + r.nextInt(40);
         long checks = 0;
         while (!g.isOver()) {
-            g.beginTurn();
             for (int v = 0; v < pc; v++) {
                 if (!g.active[v]) continue;
                 tr[v].turn(Protocol.turnLinesV5(g, v));

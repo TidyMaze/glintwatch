@@ -55,7 +55,6 @@ public final class BotState {
         for (int c = 0; c < tracker.crystalCells.size(); c++) {
             int p = tracker.crystalCells.get(c);
             game.litBy[p] = tracker.litBy[c];
-            if (cfg.tides) b.phase[p] = phaseFromTide(tracker.tide[c], t);
         }
         for (int k = 0; k < playerCount; k++) {
             game.score[k] = tracker.score[k];
@@ -65,12 +64,6 @@ public final class BotState {
         }
         game.turn = t - 1;
         turns++;
-    }
-
-    /** Crystal phase from the signed tide of turn t (k > 0 awake k more turns, -k asleep k more turns). */
-    int phaseFromTide(int tide, int t) {
-        int m = tide > 0 ? cfg.tideAwake - tide : cfg.tideCycle + tide;
-        return Math.floorMod(m - t, cfg.tideCycle);
     }
 
     /** Copy for a 1-turn simulation: own pending mirrors act now, rival pending ones stay Empty, own new mirror acts now. */

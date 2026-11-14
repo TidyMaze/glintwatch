@@ -172,3 +172,16 @@ check("v4 fallback", G.statement_block("## Statement v4\n> old\n# History\n"), "
 check("statement pitch is neutral (V5.5)", bool(re.search(r"\byou(r)?\b", G.STATEMENT_PITCH, re.I)), False)
 check("statement pitch text", G.STATEMENT_PITCH, "Players bend their lamps' beams with shared mirrors to hold the reef's crystals alone. 2 to 4 players.")
 print("OK", "gen_statements tests")
+
+# real statement: diagrams per league (all URLs assumed live; the live check is tested above)
+_doc = G.statement_block(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "DESIGN.md"), encoding="utf-8").read())
+_saved = G.image_html.__defaults__
+G.image_html.__defaults__ = (lambda n: True,)
+_imgs = {L: __import__("re").findall(r'statement/([a-z_]+)\.png', G.page(_doc, L)) for L in range(1, 5)}
+G.image_html.__defaults__ = _saved
+check("league 1 diagrams", _imgs[1], ["setup", "stops_wood", "mirrors", "shared_wood", "order_wood"])
+check("league 2 diagrams", _imgs[2], ["setup", "stops", "mirrors", "lock", "contested", "streak"])
+check("league 3 diagrams", len(_imgs[3]), 9)
+check("league 4 diagrams", len(_imgs[4]), 11)
+check("no wood variant after league 1", [n for L in (2, 3, 4) for n in _imgs[L] if n.endswith("_wood")], [])
+print("OK", "diagram placement tests")

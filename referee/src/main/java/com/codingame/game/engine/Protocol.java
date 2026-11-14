@@ -49,16 +49,11 @@ public final class Protocol {
         return lines;
     }
 
-    /** Signed tide: k > 0 awake for k more turns (this one included), -k asleep for k more turns, 0 always awake. */
-    static int tide(Game g, int p, int turn) {
-        if (!g.cfg.tides) return 0;
-        int m = (turn + g.board.phase[p]) % g.cfg.tideCycle;
-        return m < g.cfg.tideAwake ? g.cfg.tideAwake - m : -(g.cfg.tideCycle - m);
-    }
-
-    /** Turn: myScore + 4 hands (-1 eliminated or missing); mirrors x y type lock life (lock -1 = pending, life 0 = echo
-     *  of a mirror that shattered at the end of last turn); crystals tide litBy myStreak in reef order. */
+    /** Turn (V6, the same layout in every league): myScore + 4 hands (-1 eliminated or missing); mirrors x y type lock life
+     *  (lock -1 = pending, life 0 = echo of a mirror that shattered at the end of last turn); crystals tide litBy myStreak
+     *  in reef order, tide always 0 (no tides since V6). */
     public static List<String> turnLinesV5(Game g, int viewer) {
+        g.beginTurn(); // F6 step 0 before any input is written (idempotent): every consumer sees the supply
         Board b = g.board;
         int[] order = relativeOrder(g, viewer);
         List<String> lines = new ArrayList<>();
@@ -68,8 +63,8 @@ public final class Protocol {
         java.util.TreeMap<Integer, String> mirrors = new java.util.TreeMap<>();
         for (int p = 0; p < b.n * b.n; p++)
             if (b.mirrorType[p] >= 0) {
-                boolean pending = b.pending[p] > 0, hidden = g.cfg.sealed && pending && b.lastToucher[p] != viewer;
-                mirrors.put(p, Geometry.x(p, b.n) + " " + Geometry.y(p, b.n) + " " + (hidden ? -1 : b.mirrorType[p]) + " "
+                boolean pending = b.pending[p] > 0;
+                mirrors.put(p, Geometry.x(p, b.n) + " " + Geometry.y(p, b.n) + " " + b.mirrorType[p] + " "
                     + (pending ? -1 : b.mirrorLock[p]) + " " + b.mirrorLife[p]);
             }
         for (int[] s : g.lastShattered) mirrors.put(s[0], Geometry.x(s[0], b.n) + " " + Geometry.y(s[0], b.n) + " " + s[1] + " 0 0");
@@ -79,7 +74,7 @@ public final class Protocol {
         for (int p = 0; p < b.n * b.n; p++)
             if (b.kind[p] == Board.CRYSTAL) {
                 int by = g.litBy[p];
-                crystals.add(tide(g, p, g.currentTurn()) + " " + (by < 0 ? by : relativeId(order, by)) + " " + g.streak[viewer][p]);
+                crystals.add("0 " + (by < 0 ? by : relativeId(order, by)) + " " + g.streak[viewer][p]);
             }
         lines.add(String.valueOf(crystals.size()));
         lines.addAll(crystals);

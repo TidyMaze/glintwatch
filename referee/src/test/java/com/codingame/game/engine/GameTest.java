@@ -38,7 +38,7 @@ class GameTest {
     /** Wood 1 rules plus strike: mirrors act at once, stock 12, no wear, no tides. */
     private static Config immediate() {
         Config c = Config.woodOne();
-        c.strikeBonus = 2;
+        c.strikeBonus = Config.forLeague(4).strikeBonus;
         return c;
     }
 
@@ -54,27 +54,30 @@ class GameTest {
         assertFalse(w2.turnAllowed);
         assertFalse(w2.contested);
         assertFalse(w2.walls);
-        assertEquals(100, w2.maxTurns);
+        assertEquals(150, w2.maxTurns, "V6: 150 turns in every league");
+        assertEquals(150, si.maxTurns);
         assertEquals(12, w2.mirrorStock);
         assertTrue(w1.turnAllowed && w1.contested && w1.walls);
         assertEquals(150, w1.maxTurns);
-        assertEquals(5, w1.lock);
+        assertEquals(2, w1.lock, "V6: lock 2 in every league with TURN");
+        assertEquals(2, br.lock);
+        assertEquals(2, si.lock);
         assertEquals(4, w1.streakCap);
         assertFalse(w1.buildDelay);
         assertEquals(-1, w1.mirrorLife);
-        assertEquals(0, w1.supplyEvery);
-        assertTrue(br.buildDelay && br.sealed);
-        assertEquals(4, br.mirrorStock);
-        assertEquals(4, br.supplyEvery);
-        assertEquals(6, br.handMax);
+        assertEquals(12, w1.mirrorStock);
+        assertTrue(br.buildDelay);
+        assertEquals(12, br.mirrorStock);
+        assertEquals(10, br.supplyEvery, "V6: supply every 10 turns in every league");
         assertEquals(20, br.mirrorLife);
-        assertFalse(br.multiValues || br.tides);
+        assertFalse(br.multiValues);
         assertEquals(0, br.strikeBonus);
-        assertTrue(si.multiValues && si.tides && si.buildDelay);
-        assertEquals(2, si.strikeBonus);
-        assertEquals(45, si.tideCycle);
-        assertEquals(30, si.tideAwake);
-        assertEquals(si.tides, Config.forLeague(9).tides);
+        assertTrue(si.multiValues && si.buildDelay);
+        assertEquals(12, si.mirrorStock);
+        assertEquals(4, si.strikeBonus);
+        assertEquals(0, w2.strikeBonus);
+        assertEquals(0, w1.strikeBonus);
+        assertEquals(0, br.strikeBonus);
         Config v1 = Config.v1Bronze();
         assertEquals(20, v1.mirrorStock);
         assertEquals(3, v1.lock);
@@ -120,14 +123,15 @@ class GameTest {
         r = g.playTurn(waits(4)); // t+1: still pending, activates at the end
         assertEquals(0, r.gain[0]);
         assertEquals(0, g.board.pending[at(5, 3)]);
-        assertEquals(5, g.board.mirrorLock[at(5, 3)]);
+        assertEquals(2, g.board.mirrorLock[at(5, 3)], "V6 lock 2");
         assertEquals(20, g.board.mirrorLife[at(5, 3)]);
         r = g.playTurn(waits(4)); // t+2: reflects
         assertEquals(2, r.gain[0]);
-        assertEquals(4, g.board.mirrorLock[at(5, 3)]);
+        assertEquals(1, g.board.mirrorLock[at(5, 3)]);
         assertEquals(19, g.board.mirrorLife[at(5, 3)]);
-        for (int t = 3; t <= 6; t++) assertNotNull(g.playTurn(cmds(turn(5, 3), waitCmd(), waitCmd(), waitCmd())).invalid[0], "t+" + t);
-        assertNull(g.playTurn(cmds(turn(5, 3), waitCmd(), waitCmd(), waitCmd())).invalid[0]); // t+7
+        assertNotNull(g.playTurn(cmds(turn(5, 3), waitCmd(), waitCmd(), waitCmd())).invalid[0], "t+3 still locked");
+        assertNull(g.playTurn(cmds(turn(5, 3), waitCmd(), waitCmd(), waitCmd())).invalid[0]); // t+4
+        assertEquals(17, g.board.mirrorLife[at(5, 3)], "V6: the turned turn wears too (18 -> 17)");
     }
 
     @Test
@@ -145,7 +149,26 @@ class GameTest {
     }
 
     @Test
-    void turnedMirrorKeepsItsLifeThatTurn() throws Exception {
+    void supplyAddsOneMirrorEveryTenTurnsInEveryLeagueWithoutCap() throws Exception {
+        for (int league = 1; league <= 4; league++) {
+            Config cfg = Config.forLeague(league);
+            cfg.earlyEnd = false; // tests supply, not the end
+            Game g = new Game(example(), 4, cfg);
+            int[] hand = new int[32];
+            for (int t = 1; t <= 31; t++) {
+                g.beginTurn();
+                hand[t] = g.mirrorsLeft[1];
+                g.playTurn(waits(4));
+            }
+            assertEquals(12, hand[9], "league " + league);
+            assertEquals(13, hand[10], "league " + league + ": +1 on turns t % 10 == 0");
+            assertEquals(13, hand[11], "league " + league);
+            assertEquals(15, hand[31], "league " + league + ": no hand cap");
+        }
+    }
+
+    @Test
+    void turnedMirrorWearsOnTheTurnItIsTurned() throws Exception {
         Config c = Config.bronze();
         c.lock = 0;
         Game g = new Game(example(), 4, c);
@@ -154,7 +177,7 @@ class GameTest {
         g.playTurn(waits(4));
         assertEquals(19, g.board.mirrorLife[at(5, 3)]);
         g.playTurn(cmds(turn(5, 3), waitCmd(), waitCmd(), waitCmd()));
-        assertEquals(19, g.board.mirrorLife[at(5, 3)]);
+        assertEquals(18, g.board.mirrorLife[at(5, 3)], "V6: wear counts on every active turn, turned or not");
     }
 
     @Test
@@ -170,40 +193,22 @@ class GameTest {
         }
     }
 
-    @Test
-    void supplyGivesOneMirrorOnTurnsDivisibleByFourBeforeInputCappedAtSix() throws Exception {
-        Config cfg = Config.bronze();
-        cfg.earlyEnd = false; // tests supply, not the end
-        Game g = new Game(example(), 4, cfg);
-        int[] hand = new int[30];
-        for (int t = 1; t <= 29; t++) {
-            g.beginTurn();
-            hand[t] = g.mirrorsLeft[1];
-            g.playTurn(waits(4));
+    private static int firstLegalTurn(int league) throws Exception {
+        Game g = new Game(example(), 4, Config.forLeague(league));
+        g.playTurn(cmds(place(5, 3, 1), waitCmd(), waitCmd(), waitCmd())); // placed on turn 1
+        for (int i = 0; i < 10; i++) {
+            int t = g.currentTurn();
+            TurnReport r = g.playTurn(cmds(turn(5, 3), waitCmd(), waitCmd(), waitCmd()));
+            if (r.invalid[0] == null) return t;
         }
-        assertEquals(4, hand[1]);
-        assertEquals(4, hand[3]);
-        assertEquals(5, hand[4]);
-        assertEquals(6, hand[8]);
-        assertEquals(6, hand[28]);
-        g.deactivate(2);
-        g.playTurn(waits(4));
-        g.playTurn(waits(4));
-        g.beginTurn();
-        assertEquals(32, g.currentTurn());
-        assertEquals(0, g.mirrorsLeft[2]);
-        assertEquals(6, g.mirrorsLeft[1]);
+        return -1;
     }
 
+    /** V6 lock 2: first legal TURN is turn t+3 in Wood 1 (no build time) and t+4 from Bronze (pending turn, then active). */
     @Test
-    void beginTurnIsIdempotent() {
-        Game g = new Game(example(), 4, Config.bronze());
-        for (int t = 1; t < 4; t++) g.playTurn(new Command[4]);
-        g.beginTurn();
-        g.beginTurn();
-        assertEquals(5, g.mirrorsLeft[0]);
-        g.playTurn(new Command[4]);
-        assertEquals(5, g.mirrorsLeft[0]);
+    void firstLegalTurnAfterAPlacementWithLockTwo() throws Exception {
+        assertEquals(4, firstLegalTurn(2), "Wood 1: placed on 1, first TURN on 4");
+        assertEquals(5, firstLegalTurn(3), "Bronze: placed on 1, first TURN on 5");
     }
 
     @Test
@@ -213,7 +218,7 @@ class GameTest {
         TurnReport r = g.playTurn(cmds(waitCmd(), turn(5, 3), place(5, 3, 0), waitCmd()));
         assertNotNull(r.invalid[1]);
         assertNotNull(r.invalid[2]);
-        assertEquals(4, g.mirrorsLeft[2]);
+        assertEquals(12, g.mirrorsLeft[2]);
     }
 
     @Test
@@ -266,22 +271,15 @@ class GameTest {
     }
 
     @Test
-    void dormantCrystalPaysNothingAndClearsStreaks() throws Exception {
-        Config c = immediate();
-        c.tides = true;
-        c.earlyEnd = false; // tests tides, not the end
-        Board b = example();
-        b.phase[at(5, 6)] = 44; // awake when (t+44)%45 < 30: turns 1..30, dormant 31..45
-        Game g = new Game(b, 4, c);
-        int[] gain = new int[33];
+    void topLeagueCrystalsNeverSleep() throws Exception {
+        Config c = Config.silver();
+        c.mirrorLife = -1; // keep the mirror alive for the whole run
+        c.earlyEnd = false;
+        Game g = new Game(example(), 4, c);
+        int[] gain = new int[46];
         g.playTurn(cmds(place(5, 3, 1), waitCmd(), waitCmd(), waitCmd()));
-        for (int t = 2; t <= 32; t++) gain[t] = g.playTurn(waits(4)).gain[0];
-        assertEquals(8, gain[30]);
-        assertEquals(0, gain[31]);
-        assertEquals(0, g.streak[0][at(5, 6)]);
-        assertFalse(g.awake(at(5, 6), 31));
-        assertTrue(g.awake(at(5, 6), 30));
-        assertTrue(g.awake(at(5, 6), 46));
+        for (int t = 2; t <= 45; t++) gain[t] = g.playTurn(waits(4)).gain[0];
+        for (int t = 31; t <= 45; t++) assertEquals(8, gain[t], "turn " + t + ": no tides in V6");
     }
 
     @Test
@@ -391,7 +389,7 @@ class GameTest {
     void strikeGivesBonusOnlyWhenEnabled() throws Exception {
         Game g = new Game(Board.empty(13, 3), 4, immediate());
         TurnReport r = g.playTurn(cmds(place(12, 3, 1), waitCmd(), waitCmd(), waitCmd()));
-        assertEquals(2, r.gain[0]);
+        assertEquals(4, r.gain[0], "top league: a strike pays 4");
         assertEquals(2, r.beams[0].struckSeat);
         Game w = new Game(Board.empty(13, 3), 4, Config.forLeague(2));
         assertEquals(0, w.playTurn(cmds(place(12, 3, 1), waitCmd(), waitCmd(), waitCmd())).gain[0]);
@@ -434,13 +432,13 @@ class GameTest {
     }
 
     @Test
-    void sealedTypeHiddenFromRivalsUntilActive() throws Exception {
+    void pendingTypeIsVisibleToEveryone() throws Exception {
         Game g = new Game(example(), 4, Config.bronze());
         g.playTurn(cmds(place(5, 3, 1), waitCmd(), waitCmd(), waitCmd()));
         assertTrue(Protocol.turnLinesV5(g, 0).contains("5 3 1 -1 20"));
-        assertTrue(Protocol.turnLinesV5(g, 1).contains("5 3 -1 -1 20"));
+        assertTrue(Protocol.turnLinesV5(g, 1).contains("5 3 1 -1 20"), "V6: no hidden type");
         g.playTurn(cmds(waitCmd(), waitCmd(), waitCmd(), waitCmd()));
-        assertTrue(Protocol.turnLinesV5(g, 1).contains("5 3 1 5 20"));
+        assertTrue(Protocol.turnLinesV5(g, 1).contains("5 3 1 2 20"));
     }
 
     @Test

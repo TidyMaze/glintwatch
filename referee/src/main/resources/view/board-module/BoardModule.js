@@ -72,8 +72,8 @@ export class BoardModule {
 
   handleGlobalData (players, data) {
     if (!data) return
-    const [n, cell, x0, y0, beamWidth, playerCount] = data.l
-    Object.assign(this, { n, cell, x0, y0, beamWidth, playerCount, layerIds: data.z })
+    const [n, cell, x0, y0, beamWidth, playerCount, lockSlots] = data.l
+    Object.assign(this, { n, cell, x0, y0, beamWidth, playerCount, lockSlots, layerIds: data.z })
     this.state = { m: data.m0 || '', c: '', b: ['', '', '', ''] }
   }
 
@@ -162,9 +162,9 @@ export class BoardModule {
     v.bar.addChild(v.barSprite, v.crack1, v.crack2)
     v.root.addChild(v.base, v.bar, v.pending)
     v.arcs = []
-    for (let k = 0; k < 5; k++) {
+    for (let k = 0; k < this.lockSlots; k++) {
       const a = sprite('lock_arc.png', s, s)
-      a.rotation = k * 2 * Math.PI / 5
+      a.rotation = k * 2 * Math.PI / this.lockSlots
       v.root.addChild(a)
       v.arcs.push(a)
     }

@@ -60,26 +60,6 @@ class MapGeneratorTest {
     }
 
     @Test
-    void crystalPhasesAreSymmetricInRangeAndCentreIsZero() {
-        for (long s = 0; s < SEEDS; s++) {
-            Board b = MapGenerator.generate(s, false);
-            int c = (b.n - 1) / 2;
-            assertEquals(0, b.phase[Geometry.idx(c, c, b.n)]);
-            for (int p = 0; p < b.n * b.n; p++) {
-                if (b.kind[p] != Board.CRYSTAL) continue;
-                assertTrue(b.phase[p] >= 0 && b.phase[p] < 45);
-                assertEquals(b.phase[p], b.phase[Geometry.rot(p, b.n)]);
-            }
-        }
-    }
-
-    @Test
-    void phasesDoNotChangeTheLayout() {
-        for (long s = 0; s < 50; s++)
-            assertEquals(MapGenerator.generate(s, true, true).describe(), MapGenerator.generate(s, true, true).describe());
-    }
-
-    @Test
     void centreIsAValueThreeCrystal() {
         for (long s = 0; s < SEEDS; s++) {
             Board b = MapGenerator.generate(s, false);

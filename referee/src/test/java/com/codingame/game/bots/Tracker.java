@@ -153,10 +153,6 @@ public final class Tracker {
                 for (int k = 0; k < playerCount; k++) if (lit[k] != null && lit[k][p]) gain[k] += board.value[p];
                 continue;
             }
-            if (cfg.tides && tide[c] < 0) {
-                for (int k = 0; k < playerCount; k++) streak[k][p] = 0;
-                continue;
-            }
             for (int k = 0; k < playerCount; k++) {
                 boolean inL = lit[k] != null && lit[k][p];
                 if (lighters[p] == 1 && inL) {

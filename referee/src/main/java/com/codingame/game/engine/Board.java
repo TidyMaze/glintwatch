@@ -10,8 +10,8 @@ public final class Board {
     public final int n, e;
     /** pending[p] > 0: the mirror is built but does not reflect yet. */
     public final int[] kind, value, lampSeat, mirrorType, mirrorLock, lastToucher, pending;
-    /** mirrorLife: active turns left, -1 = no wear. phase: crystal tide phase 0..44. */
-    public final int[] mirrorLife, phase;
+    /** mirrorLife: active turns left, -1 = no wear. */
+    public final int[] mirrorLife;
 
     private Board(int n, int e) {
         this.n = n;
@@ -25,7 +25,6 @@ public final class Board {
         lastToucher = filled(size, -1);
         pending = new int[size];
         mirrorLife = filled(size, -1);
-        phase = new int[size];
     }
 
     private static int[] filled(int size, int v) {
@@ -55,7 +54,6 @@ public final class Board {
         System.arraycopy(lastToucher, 0, b.lastToucher, 0, lastToucher.length);
         System.arraycopy(pending, 0, b.pending, 0, pending.length);
         System.arraycopy(mirrorLife, 0, b.mirrorLife, 0, mirrorLife.length);
-        System.arraycopy(phase, 0, b.phase, 0, phase.length);
         return b;
     }
 

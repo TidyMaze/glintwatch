@@ -89,7 +89,7 @@ public class Referee extends AbstractReferee {
 
     private void playTurn(int turn) {
         injectedFault("turn " + turn);
-        game.beginTurn();
+        game.beginTurn(); // F6 step 0: supply before the input is sent
         for (Player p : gameManager.getActivePlayers()) {
             if (turn == 1)
                 for (String l : Protocol.initLinesV5(game, p.getIndex())) p.sendInputLine(l);
@@ -117,8 +117,6 @@ public class Referee extends AbstractReferee {
             String reason = game.endReason();
             if ("stale".equals(reason))
                 gameManager.addToGameSummary("Game over: no player acted for " + game.cfg.staleTurns + " turns; the remaining turns were played with every player waiting.");
-            else if ("decided".equals(reason))
-                gameManager.addToGameSummary("Game over: the ranking can no longer change.");
             gameManager.endGame();
         }
     }

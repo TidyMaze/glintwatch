@@ -56,20 +56,18 @@ class ProtocolV5Test {
     void turnLinesWoodOneGolden() throws Exception {
         Game g = new Game(example(), 2, Config.woodOne());
         g.playTurn(new Command[] {c("PLACE 5 3 1"), c("WAIT")});
-        g.beginTurn();
-        assertEquals(java.util.Arrays.asList("2 11 12 -1 -1", "1", "5 3 1 5 -1", "1", "0 0 1"), Protocol.turnLinesV5(g, 0));
-        assertEquals(java.util.Arrays.asList("0 12 11 -1 -1", "1", "5 3 1 5 -1", "1", "0 1 0"), Protocol.turnLinesV5(g, 1));
+        assertEquals(java.util.Arrays.asList("2 11 12 -1 -1", "1", "5 3 1 2 -1", "1", "0 0 1"), Protocol.turnLinesV5(g, 0));
+        assertEquals(java.util.Arrays.asList("0 12 11 -1 -1", "1", "5 3 1 2 -1", "1", "0 1 0"), Protocol.turnLinesV5(g, 1));
     }
 
     @Test
     void pendingMirrorShowsLockMinusOneAndIsSealedForRivals() throws Exception {
         Game g = new Game(example(), 4, Config.bronze());
         g.playTurn(new Command[] {c("PLACE 5 3 1"), c("WAIT"), c("WAIT"), c("WAIT")});
-        g.beginTurn();
         assertEquals("5 3 1 -1 20", Protocol.turnLinesV5(g, 0).get(2));
-        assertEquals("5 3 -1 -1 20", Protocol.turnLinesV5(g, 1).get(2));
-        assertEquals("0 3 4 4 4", Protocol.turnLinesV5(g, 0).get(0));
-        assertEquals("0 4 4 4 3", Protocol.turnLinesV5(g, 1).get(0), "hands in relative order");
+        assertEquals("5 3 1 -1 20", Protocol.turnLinesV5(g, 1).get(2), "V6: a pending mirror shows its real type");
+        assertEquals("0 11 12 12 12", Protocol.turnLinesV5(g, 0).get(0));
+        assertEquals("0 12 12 12 11", Protocol.turnLinesV5(g, 1).get(0), "hands in relative order");
     }
 
     @Test
@@ -81,30 +79,20 @@ class ProtocolV5Test {
         g.playTurn(new Command[] {c("PLACE 5 3 1"), c("WAIT")}); // pending
         g.playTurn(new Command[] {c("WAIT"), c("WAIT")});        // activates, life 2
         g.playTurn(new Command[] {c("WAIT"), c("WAIT")});        // life 1
-        g.playTurn(new Command[] {c("TURN 5 3"), c("WAIT")});    // turned on its last turn: type 0, then life... kept by the turn
-        g.playTurn(new Command[] {c("WAIT"), c("WAIT")});        // life 0: shatters
-        g.beginTurn();
+        g.playTurn(new Command[] {c("TURN 5 3"), c("WAIT")});    // turned on its last turn: wear counts on it too (V6), life 0: shatters
         List<String> lines = Protocol.turnLinesV5(g, 1);
         assertEquals("1", lines.get(1));
         assertEquals("5 3 0 0 0", lines.get(2));
         g.playTurn(new Command[] {c("WAIT"), c("WAIT")});
-        g.beginTurn();
-        assertEquals("0", Protocol.turnLinesV5(g, 1).get(1), "echoed once");
+        assertEquals("0", Protocol.turnLinesV5(g, 1).get(1), "echoed once"); 
     }
 
     @Test
-    void tideIsSignedTurnsLeftAndZeroWithoutTides() {
-        Board b = example();
-        b.phase[Geometry.idx(5, 6, 13)] = 20; // turn 1: m = 21, awake 9 more turns (21..29)
-        Game g = new Game(b, 2, Config.silver());
-        g.beginTurn();
-        assertEquals("9 -1 0", Protocol.turnLinesV5(g, 0).get(3));
-        for (int t = 1; t < 10; t++) g.playTurn(new Command[2]);
-        g.beginTurn(); // turn 10: m = 30, asleep 15 more turns
-        assertEquals("-15 -1 0", Protocol.turnLinesV5(g, 0).get(3));
-        Game w = new Game(example(), 2, Config.bronze());
-        w.beginTurn();
-        assertEquals("0 -1 0", Protocol.turnLinesV5(w, 0).get(3));
+    void tideFieldIsZeroInEveryLeague() {
+        Game g = new Game(example(), 2, Config.silver());
+        assertEquals("0 -1 0", Protocol.turnLinesV5(g, 0).get(3));
+        for (int t = 1; t < 40; t++) g.playTurn(new Command[2]);
+        assertEquals("0 -1 0", Protocol.turnLinesV5(g, 0).get(3), "turn 40: no tides in V6");
     }
 
     @Test
@@ -112,7 +100,6 @@ class ProtocolV5Test {
         Game g = new Game(example(), 4, Config.woodOne());
         g.playTurn(new Command[] {c("PLACE 5 3 1"), c("WAIT"), c("WAIT"), c("WAIT")});
         g.deactivate(1);
-        g.beginTurn();
         List<String> me3 = Protocol.turnLinesV5(g, 3);
         assertEquals("0 12 11 -1 12", me3.get(0), "seat order from 3: 3, 0, 1, 2");
         assertEquals("0 1 0", me3.get(4), "lit alone by player 0 = relative 1 for viewer 3");

@@ -13,10 +13,6 @@ public final class Tuning {
         c.streakCap = Integer.parseInt(p.getProperty("gw.streakCap", String.valueOf(c.streakCap)));
         c.mirrorLife = Integer.parseInt(p.getProperty("gw.mirrorLife", String.valueOf(c.mirrorLife)));
         c.mirrorStock = Integer.parseInt(p.getProperty("gw.mirrorStock", String.valueOf(c.mirrorStock)));
-        c.supplyEvery = Integer.parseInt(p.getProperty("gw.supplyEvery", String.valueOf(c.supplyEvery)));
-        c.handMax = Integer.parseInt(p.getProperty("gw.handMax", String.valueOf(c.handMax)));
         c.strikeBonus = Integer.parseInt(p.getProperty("gw.strikeBonus", String.valueOf(c.strikeBonus)));
-        c.tideCycle = Integer.parseInt(p.getProperty("gw.tideCycle", String.valueOf(c.tideCycle)));
-        c.tideAwake = Integer.parseInt(p.getProperty("gw.tideAwake", String.valueOf(c.tideAwake)));
     }
 }

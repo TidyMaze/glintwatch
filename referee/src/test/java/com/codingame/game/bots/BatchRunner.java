@@ -90,7 +90,6 @@ public final class BatchRunner {
             bots[id].init(Protocol.initLinesV5(g, id));
         }
         while (!g.isOver()) {
-            g.beginTurn();
             long budget = (g.turn == 0 ? opt.firstTurnBudgetMs : opt.turnBudgetMs) * 1_000_000L;
             Command[] cmds = new Command[players];
             for (int id = 0; id < players; id++) {

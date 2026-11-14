@@ -16,13 +16,29 @@ public final class Agents {
         return Config.forLeague(Integer.getInteger("glintwatch.league", 3));
     }
 
-    /** Builds a bot by name: wait, random, crash, slow. */
+    /** Builds a bot by name: wait, random, self, greedy, plus, crash. */
     public static Bot create(String name, Config cfg, long seed) {
+        if (System.getProperty("gw.ext." + name) != null) return new ExternalBot(name, System.getProperty("gw.ext." + name));
+        if (name.startsWith("planner")) return new PlannerBot(cfg, name);
+        if (name.matches("strong[1-4]")) return new StrongBot(cfg, name.charAt(6) - '0');
         switch (name) {
             case "wait": return new WaitBot();
+            case "wanderer": return new WandererBot(cfg);
             case "random": return new RandomBot(cfg, seed);
+            case "self": return new GreedyBot(cfg, GreedyBot.Mode.SELF);
+            case "greedy": return new GreedyBot(cfg, GreedyBot.Mode.FULL);
+            case "plus": return new GreedyBot(cfg, GreedyBot.Mode.PLUS);
+            case "greedy2": return new Boss2(cfg, GreedyBot.Mode.FULL, 10, 1.0);
+            case "boss2all": return new Boss2(cfg, GreedyBot.Mode.FULL, 10, 1.0).allLanes(true).rivalWeight(0.5);
+            case "plus2": return new Boss2(cfg, GreedyBot.Mode.PLUS, 10, 1.0);
             case "crash": return new CrashBot();
             case "slow": return new SlowBot();
+            case "cutter": return new CheapBot(cfg, CheapBot.Mode.CUTTER);
+            case "renewer": return new CheapBot(cfg, CheapBot.Mode.RENEWER);
+            case "spoiler": return new CheapBot(cfg, CheapBot.Mode.SPOILER);
+            case "freerider":
+            case "free": return new CheapBot(cfg, CheapBot.Mode.FREE);
+            case "plusw": return new CheapBot(cfg, CheapBot.Mode.PLUS_W);
             default: throw new IllegalArgumentException("unknown bot " + name);
         }
     }
@@ -58,9 +74,39 @@ public final class Agents {
         public static void main(String[] a) throws IOException { loop(new WaitBot(), System.in, System.out); }
     }
 
+    /** Level 1 boss (config/level1/Boss.java plays the same, BossFilesTest). */
+    public static class Wanderer {
+        public static void main(String[] a) throws IOException { loop(new WandererBot(cfg()), System.in, System.out); }
+    }
+
     public static class Random {
-        /** Seed from -Dglintwatch.botSeed (default 1): the engine's BatchRunner seeds its random bot with the game seed. */
-        public static void main(String[] a) throws IOException { loop(new RandomBot(cfg(), Long.getLong("glintwatch.botSeed", 1L)), System.in, System.out); }
+        public static void main(String[] a) throws IOException { loop(new RandomBot(cfg(), 1), System.in, System.out); }
+    }
+
+    public static class Self {
+        public static void main(String[] a) throws IOException { loop(new GreedyBot(cfg(), GreedyBot.Mode.SELF), System.in, System.out); }
+    }
+
+    public static class Greedy {
+        public static void main(String[] a) throws IOException { loop(new GreedyBot(cfg(), GreedyBot.Mode.FULL), System.in, System.out); }
+    }
+
+    public static class Plus {
+        public static void main(String[] a) throws IOException { loop(new GreedyBot(cfg(), GreedyBot.Mode.PLUS), System.in, System.out); }
+    }
+
+    /** Bronze boss candidate G2 (2-turn own search). */
+    public static class Greedy2 {
+        public static void main(String[] a) throws IOException { loop(create("greedy2", cfg(), 1), System.in, System.out); }
+    }
+
+    /** Silver boss candidate (vote-analyst's PlannerBot). */
+    public static class Planner {
+        public static void main(String[] a) throws IOException { loop(create("planner", cfg(), 1), System.in, System.out); }
+    }
+
+    public static class Cutter {
+        public static void main(String[] a) throws IOException { loop(create("cutter", cfg(), 1), System.in, System.out); }
     }
 
     /** WAIT on turn 1, then sleeps past the 50 ms turn limit: the referee must eliminate it for timeout. */

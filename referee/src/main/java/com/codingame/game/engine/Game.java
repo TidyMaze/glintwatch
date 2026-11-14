@@ -87,10 +87,6 @@ public final class Game {
         return turn + 1;
     }
 
-    public boolean awake(int p, int turnNumber) {
-        return !cfg.tides || (turnNumber + board.phase[p]) % cfg.tideCycle < cfg.tideAwake;
-    }
-
     /** Per seat: Board.SEAT_ACTIVE, SEAT_INACTIVE or SEAT_EMPTY. */
     public int[] seatStates() {
         int[] s = {Board.SEAT_EMPTY, Board.SEAT_EMPTY, Board.SEAT_EMPTY, Board.SEAT_EMPTY};
@@ -115,27 +111,11 @@ public final class Game {
         return earlyReason != null || turn >= cfg.maxTurns || activeCount() < 2;
     }
 
-    /** Why the game ended: "decided", "stale", "fewer than two players", "max turns"; null while it runs. */
+    /** Why the game ended: "stale", "fewer than two players", "max turns"; null while it runs. */
     public String endReason() {
         if (earlyReason != null) return earlyReason;
         if (activeCount() < 2) return "fewer than two players";
         return turn >= cfg.maxTurns ? "max turns" : null;
-    }
-
-    /** B of V5.5: most points one player can score in a turn (streak cap x sum of values, + strike). */
-    public int maxGainPerTurn() {
-        int sum = 0;
-        for (int p = 0; p < board.n * board.n; p++) if (board.kind[p] == Board.CRYSTAL) sum += board.value[p];
-        return (cfg.contested ? cfg.streakCap : 1) * sum + cfg.strikeBonus;
-    }
-
-    /** V5.5 decided: every pair of active players is further apart than turns left x B. */
-    boolean decided() {
-        long bound = (long) (cfg.maxTurns - turn) * maxGainPerTurn();
-        for (int i = 0; i < playerCount; i++)
-            for (int j = i + 1; j < playerCount; j++)
-                if (active[i] && active[j] && Math.abs(score[i] - score[j]) <= bound) return false;
-        return true;
     }
 
     boolean stale() {
@@ -143,11 +123,10 @@ public final class Game {
         return true;
     }
 
-    /** End of turn (F6 step 8 + V5.5): decided, or stale = the referee plays the remaining turns with everyone waiting. */
+    /** End of turn (F6 step 8): V6 has one early end, stale: the referee plays the remaining turns with everyone waiting. */
     private void earlyEndCheck() {
         if (!cfg.earlyEnd || fastForwarding || turn >= cfg.maxTurns || activeCount() < 2) return;
-        if (decided()) earlyReason = "decided";
-        else if (stale()) {
+        if (stale()) {
             fastForwarding = true;
             while (turn < cfg.maxTurns && activeCount() >= 2) playTurn(new Command[playerCount]);
             fastForwarding = false;
@@ -162,7 +141,7 @@ public final class Game {
         suppliedTurn = t;
         if (cfg.supplyEvery > 0 && t % cfg.supplyEvery == 0)
             for (int id = 0; id < playerCount; id++)
-                if (active[id]) mirrorsLeft[id] = Math.min(cfg.handMax, mirrorsLeft[id] + 1);
+                if (active[id]) mirrorsLeft[id]++; // V6 supply: +1 on turns t % 10 == 0, no hand cap
     }
 
     /** @param cmds by player id; null entries (or inactive players) count as WAIT. */
@@ -284,10 +263,6 @@ public final class Game {
                 for (int id = 0; id < playerCount; id++) if (lit[id] != null && lit[id][p]) r.gain[id] += board.value[p];
                 continue;
             }
-            if (!awake(p, t)) {
-                for (int id = 0; id < playerCount; id++) streak[id][p] = 0;
-                continue;
-            }
             for (int id = 0; id < playerCount; id++) {
                 boolean inL = lit[id] != null && lit[id][p];
                 if (lighters[p] == 1 && inL) {
@@ -308,8 +283,8 @@ public final class Game {
                 r.activated.add(p);
                 continue;
             }
-            if (turned[p]) continue;
-            board.mirrorLock[p] = Math.max(board.mirrorLock[p] - 1, 0);
+            if (!turned[p]) board.mirrorLock[p] = Math.max(board.mirrorLock[p] - 1, 0); // a TURN sets the lock on its turn
+            // wear counts on every active turn, turned or not (V6)
             if (board.mirrorLife[p] > 0 && --board.mirrorLife[p] == 0) {
                 lastShattered.add(new int[] {p, board.mirrorType[p]});
                 board.removeMirror(p);

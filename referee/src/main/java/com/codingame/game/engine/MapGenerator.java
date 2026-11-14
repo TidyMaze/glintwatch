@@ -39,12 +39,7 @@ public final class MapGenerator {
             int type = rnd.nextInt(2);
             if (withWalls) placeRotated(b, cand.get(i), Board.EMPTY, 0, type);
         }
-        for (int i = 0; i < k; i++) {
-            int ph = rnd.nextInt(45);
-            for (int r = 0, p = cand.get(i); r < 4; r++, p = Geometry.rot(p, n)) b.phase[p] = ph;
-        }
         b.setCrystal(c, c, multiValues ? 3 : 1);
-        b.phase[Geometry.idx(c, c, n)] = 0;
         return b;
     }
 
