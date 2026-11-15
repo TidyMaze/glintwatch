@@ -189,7 +189,7 @@ public final class Game {
         if (c.kind == Command.Kind.PLACE) {
             if (c.type != 0 && c.type != 1) return "type must be 0 or 1";
             if (board.kind[p] != Board.EMPTY || board.mirrorType[p] >= 0) return "cell not empty";
-            if (zoneOwner >= 0) return "cell in zone of player " + zoneOwner;
+            if (zoneOwner >= 0) return "cell in yard of player " + zoneOwner;
             if (mirrorsLeft[id] <= 0) return "no mirror in hand";
             return null;
         }
@@ -197,7 +197,7 @@ public final class Game {
         if (board.mirrorType[p] < 0) return "no mirror there";
         if (board.pending[p] > 0) return "mirror still pending";
         if (board.mirrorLock[p] > 0) return "mirror locked " + board.mirrorLock[p] + " more turns";
-        if (zoneOwner >= 0) return "cell in zone of player " + zoneOwner;
+        if (zoneOwner >= 0) return "cell in yard of player " + zoneOwner;
         return null;
     }
 

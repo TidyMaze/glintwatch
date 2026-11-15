@@ -163,9 +163,9 @@ public final class Layout {
         return n < 17 || k % 2 == 0;
     }
 
-    /** UX 14.1: a refusal is one word: zone, lock, empty (no mirror in hand) or cell. */
+    /** UX 14.1: a refusal is one word: yard, lock, empty (no mirror in hand) or cell. */
     public static String refusedWord(String reason) {
-        if (reason.contains("zone")) return "zone";
+        if (reason.contains("yard")) return "yard";
         if (reason.contains("locked") || reason.contains("pending")) return "lock";
         if (reason.contains("in hand")) return "empty";
         return "cell";

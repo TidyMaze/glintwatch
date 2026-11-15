@@ -193,7 +193,7 @@ class LayoutUx14Test {
 
     @org.junit.jupiter.api.Test
     void refusedReasonsBecomeOneWord() {
-        org.junit.jupiter.api.Assertions.assertEquals("zone", Layout.refusedWord("cell in zone of player 2"));
+        org.junit.jupiter.api.Assertions.assertEquals("yard", Layout.refusedWord("cell in yard of player 2"));
         org.junit.jupiter.api.Assertions.assertEquals("lock", Layout.refusedWord("mirror locked 3 more turns"));
         org.junit.jupiter.api.Assertions.assertEquals("lock", Layout.refusedWord("mirror still pending"));
         org.junit.jupiter.api.Assertions.assertEquals("empty", Layout.refusedWord("no mirror in hand"));
@@ -210,8 +210,8 @@ class LayoutUx14Test {
             Layout.actionParts(com.codingame.game.engine.CommandParser.parse("TURN 3 8"), null));
         org.junit.jupiter.api.Assertions.assertArrayEquals(new String[] {"icon_wait.png", ""},
             Layout.actionParts(com.codingame.game.engine.CommandParser.parse("WAIT"), null));
-        org.junit.jupiter.api.Assertions.assertArrayEquals(new String[] {"icon_refused.png", "zone"},
-            Layout.actionParts(com.codingame.game.engine.CommandParser.parse("PLACE 1 1 0"), "cell in zone of player 1"));
+        org.junit.jupiter.api.Assertions.assertArrayEquals(new String[] {"icon_refused.png", "yard"},
+            Layout.actionParts(com.codingame.game.engine.CommandParser.parse("PLACE 1 1 0"), "cell in yard of player 1"));
         org.junit.jupiter.api.Assertions.assertArrayEquals(new String[] {"", ""}, Layout.actionParts(null, null));
     }
 

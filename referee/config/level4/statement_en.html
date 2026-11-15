@@ -33,6 +33,7 @@
 <ul>
 <li>Every lamp fires one beam each turn, after all actions of the turn.</li>
 <li>The beam moves cell by cell until it leaves the reef, reaches a rock or reaches a lamp.</li>
+<li>A beam that reaches its own lamp stops there and scores the crystals it lit on the way. <span style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">It gets no strike.</span></li>
 <li>Beams never block each other.</li>
 <li>A beam cannot loop: it never enters the same cell twice in the same direction.</li>
 <li>A beam that crosses the same crystal twice lights it once.</li>
@@ -119,12 +120,12 @@
 <h3 style="font-size: 14px; font-weight: 700; padding-top: 15px; color: #838891; padding-bottom: 15px">Values and strikes</h3>
 <div style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">
 <ul>
-<li><strong>Values.</strong> Crystals are worth <const>1</const>, <const>2</const> or <const>3</const>.</li>
+<li><strong>Values.</strong> Crystals are worth <const>1</const>, <const>2</const> or <const>3</const>. The values are drawn when the reef is generated: about half the crystals are worth <const>1</const>, 35 % <const>2</const> and 15 % <const>3</const>; the crystal in the middle of the reef is always worth <const>3</const>.</li>
 <li><strong>Strike.</strong> Each turn, a beam that ends on another player's lamp gives <const>4</const> points to the player who fired it. Each such beam counts. The struck player loses nothing. An eliminated player's lamp is a rock and gives nothing.</li>
 </ul>
 </div>
 <div style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">
-<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/values.png" alt="Crystal values from 1 to 3" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Crystals worth 1, 2 or 3, by size.</div>
+<img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/values.png" alt="Crystal values from 1 to 3" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">Crystal values 1, 2 and 3: the drawing grows with the value.</div>
 </div>
 <div style="color:#7cc576;background-color:rgba(124,197,118,.1);padding:2px">
 <img src="https://raw.githubusercontent.com/TidyMaze/glintwatch/main/art/png/statement/strike.png" alt="Strike on a rival lamp" style="width: 100%; max-width: 400px; display: block; margin: 10px auto 2px;" /><div style="text-align: center; font-size: 90%; font-style: italic; margin-bottom: 10px;">A beam that ends on another player's lamp: 4 points each turn.</div>

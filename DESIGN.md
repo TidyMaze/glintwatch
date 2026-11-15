@@ -1173,6 +1173,7 @@ Candidates (vote-analyst builds and measures; free to find better):
 > A lamp fires a straight-line beam towards the opposite edge.
 > - Every lamp fires one beam each turn, after all actions of the turn.
 > - The beam moves cell by cell until it leaves the reef[Wood 1+], reaches a rock[/] or reaches a lamp.
+> - A beam that reaches its own lamp stops there and scores the crystals it lit on the way. [Silver+] It gets no strike.
 > - Beams never block each other.
 > - A beam cannot loop: it never enters the same cell twice in the same direction.
 > - A beam that crosses the same crystal twice lights it once.
@@ -1280,11 +1281,11 @@ Candidates (vote-analyst builds and measures; free to find better):
 > ![Wear of a mirror](img/wear.png "An active mirror bends beams for 20 turns, then shatters.")
 >
 > ### [Silver+] Values and strikes
-> - **Values.** Crystals are worth `1`, `2` or `3`.
+> - **Values.** Crystals are worth `1`, `2` or `3`. The values are drawn when the reef is generated: about half the crystals are worth `1`, 35 % `2` and 15 % `3`; the crystal in the middle of the reef is always worth `3`.
 > - **Strike.** Each turn, a beam that ends on another player's lamp gives `4` points to the player who fired it.
 >   Each such beam counts. The struck player loses nothing. An eliminated player's lamp is a rock and gives nothing.
 >
-> ![Crystal values from 1 to 3](img/values.png "Crystals worth 1, 2 or 3, by size.")
+> ![Crystal values from 1 to 3](img/values.png "Crystal values 1, 2 and 3: the drawing grows with the value.")
 >
 > ![Strike on a rival lamp](img/strike.png "A beam that ends on another player's lamp: 4 points each turn.")
 >
